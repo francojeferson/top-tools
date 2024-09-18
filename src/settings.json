@@ -168,5 +168,6 @@
   "javascript.updateImportsOnFileMove.enabled": "always", // updates imports on file move
   "php.validate.executablePath": "C:/xampp/php/php.exe", // sets the PHP executable path
   "redhat.telemetry.enabled": true, // enables telemetry
-  "remote.autoForwardPortsSource": "hybrid" // sets the auto forward ports source to hybrid
+  "remote.autoForwardPortsSource": "hybrid", // sets the auto forward ports source to hybrid
+  "workbench.colorTheme": "Abyss"
 }
