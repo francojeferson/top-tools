@@ -1,3 +1,7 @@
+# Create a ~/.bashrc file
+# This file contains commands that are specific to the Bash shell
+# Best place for aliases and bash-related functions
+
 if [ -z "$SSH_AUTH_SOCK" ] ; then
   eval `ssh-agent -s`
   ssh-add ~/.ssh/delli5rtx_key
