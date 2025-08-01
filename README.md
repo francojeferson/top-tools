@@ -146,6 +146,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ![Latest XKCD Comic](xkcd_scraper/comics/latest_xkcd.jpg)
 
-> Online chess platforms democratize rankings, blending competition with complex social dynamics for players.
+> Absurd map projections humorously reveal cartographic compromises through continents on separate spheres connected by
+> land bridges.
 >
 > [_Checkout Extracted Wisdom from this Comic_](./xkcd_scraper/comics/xkcd_wisdom_output.md)
