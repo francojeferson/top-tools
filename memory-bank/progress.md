@@ -57,4 +57,14 @@ reviewed and updated as needed to reflect the current state and objectives of th
 - **Memory Bank Structure (June 2025)**: Established a structured set of Markdown files to preserve project context
   across sessions, ensuring continuity despite AI memory resets.
 
-Last Updated: July 9, 2025
+Last Updated: August 2, 2025
+
+## Recent Updates (August 2025)
+
+- **Tool Documentation**: Added documentation for new productivity tools in the `src/` directory, including:
+  - Windows system utilities
+  - VSCode extensions and configurations
+  - Browser productivity extensions
+- **Memory Bank Refocus**: Updated memory bank to better track src folder changes rather than internal maintenance
+  activities
+- **Context Management**: Enhanced context window monitoring thresholds based on recent task experiences
