@@ -8,7 +8,7 @@ A curated collection of essential development tools, extensions, and configurati
 
 - [🌐 Browser Extensions](src/browser.md) - Productivity and development browser extensions
 - [🤖 ClineRules Instructions](src/clinerules.md) - Essential preset AI assistant rule files
-- [🔗 Favorite Links](/src/fav.html) - Curated development resources and links
+- [🔗 Favorite Links](/src/fav/) - Curated development resources and links
 - [⚙️ JSON Settings](src/settings.json) - VSCode configuration settings
 - [🔧 VSCode Extensions](src/vscode.md) - Essential extensions for VSCode/VSCodium development
 - [📌 Git Configuration](src/gitconfig.md) - Git configuration settings and files
@@ -146,7 +146,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ![Latest XKCD Comic](xkcd_scraper/comics/latest_xkcd.jpg)
 
-> Absurd map projections humorously reveal cartographic compromises through continents on separate spheres connected by
-> land bridges.
+> Language evolution connects biblical canon to modern fandom through shared human tendencies for categorization and
+> devotion.
 >
 > [_Checkout Extracted Wisdom from this Comic_](./xkcd_scraper/comics/xkcd_wisdom_output.md)

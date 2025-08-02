@@ -5,28 +5,24 @@ includes a brief description, key features, performance impact, and relevant tag
 
 ## Program Compatibility
 
-| Program Name   | Version | Performance Impact | Notes                               |
-| -------------- | ------- | ------------------ | ----------------------------------- |
-| VSCodium       | Latest  | Medium             | Open-source VSCode alternative      |
-| Brave          | Latest  | Low                | Privacy-focused browser             |
-| Chrome         | Latest  | Medium             | General-purpose browser             |
-| Firefox        | Latest  | Medium             | Open-source browser                 |
-| Drive          | Latest  | Low                | Cloud storage solution              |
-| WSL            | Latest  | Medium             | Linux environment on Windows        |
-| Docker         | Latest  | High               | Containerization platform           |
-| Lightshot      | Latest  | Low                | Lightweight screenshot tool         |
-| Obsidian       | Latest  | Low                | Knowledge management tool           |
-| GitHub Desktop | Latest  | Low                | Git GUI client                      |
-| Responsively   | Latest  | Medium             | Responsive design testing           |
-| RunJS          | Latest  | Low                | JavaScript playground               |
-| Git            | Latest  | Low                | Version control system              |
-| pyenv-win      | Latest  | Low                | Python version management           |
-| nvm-windows    | Latest  | Low                | Node.js version management          |
-| Go             | Latest  | Medium             | Go programming language             |
-| Notepad++      | Latest  | Low                | Lightweight text editor             |
-| VLC            | Latest  | Low                | Versatile media player              |
-| 7-Zip          | Latest  | Low                | File archiver with high compression |
-| IrfanView      | Latest  | Low                | 32-bit graphic viewer               |
+| Program Name | Version | Performance Impact | Notes                               |
+| ------------ | ------- | ------------------ | ----------------------------------- |
+| VSCodium     | Latest  | Medium             | Open-source VSCode alternative      |
+| Brave        | Latest  | Low                | Privacy-focused browser             |
+| Chrome       | Latest  | Medium             | General-purpose browser             |
+| Drive        | Latest  | Low                | Cloud storage solution              |
+| Lightshot    | Latest  | Low                | Lightweight screenshot tool         |
+| Obsidian     | Latest  | Low                | Knowledge management tool           |
+| Responsively | Latest  | Medium             | Responsive design testing           |
+| RunJS        | Latest  | Low                | JavaScript playground               |
+| Git          | Latest  | Low                | Version control system              |
+| pyenv-win    | Latest  | Low                | Python version management           |
+| nvm-windows  | Latest  | Low                | Node.js version management          |
+| Go           | Latest  | Medium             | Go programming language             |
+| Notepad++    | Latest  | Low                | Lightweight text editor             |
+| VLC          | Latest  | Low                | Versatile media player              |
+| 7-Zip        | Latest  | Low                | File archiver with high compression |
+| IrfanView    | Latest  | Low                | 32-bit graphic viewer               |
 
 ## Browsers
 
@@ -67,26 +63,6 @@ A widely-used browser by Google with extensive extension support.
 - CPU Impact: Moderate
 
 `browser` `general-use`
-
----
-
-### [Firefox](https://www.mozilla.org/en-US/firefox/new/)
-
-An open-source browser focused on privacy and customization.
-
-**Features:**
-
-- Strong privacy protections
-- Customizable interface
-- Extensive add-on library
-- Open-source development
-
-**Performance Impact:** Medium
-
-- Memory Usage: 400MB+
-- CPU Impact: Moderate
-
-`browser` `open-source`
 
 ---
 
@@ -171,66 +147,6 @@ An open-source alternative to Visual Studio Code, without Microsoft telemetry.
 - CPU Impact: Moderate
 
 `development` `code-editor`
-
----
-
-### [WSL](https://github.com/Vets-Who-Code/windows-dev-guide)
-
-Windows Subsystem for Linux, allowing native Linux command-line tools on Windows.
-
-**Features:**
-
-- Run Linux distributions
-- Access Windows filesystem
-- Use Linux development tools
-- Integration with Windows tools
-
-**Performance Impact:** Medium
-
-- Memory Usage: 500MB+
-- CPU Impact: Moderate
-
-`development` `linux`
-
----
-
-### [Docker](https://www.docker.com/)
-
-A platform for developing, shipping, and running applications in containers.
-
-**Features:**
-
-- Container creation and management
-- Docker Hub for image sharing
-- Multi-platform support
-- Isolation of application environments
-
-**Performance Impact:** High
-
-- Memory Usage: 1GB+
-- CPU Impact: Significant
-
-`development` `containerization`
-
----
-
-### [GitHub Desktop](https://desktop.github.com/download/)
-
-A GUI client for Git, simplifying repository management and collaboration.
-
-**Features:**
-
-- Visual commit history
-- Branch management
-- Pull request creation
-- Repository cloning and forking
-
-**Performance Impact:** Low
-
-- Memory Usage: <100MB
-- CPU Impact: Minimal
-
-`development` `version-control`
 
 ---
 

@@ -1,6 +1,6 @@
 # VSCode Extensions
 
-> _Current setup: Windows 11 debloated, WSL, Docker, Git, Node.js, Python, Go, VSCodium, telemetry off_
+> _Current setup: Windows 11, Git, Node.js, Python, Go, VSCodium, telemetry off_
 
 ---
 
@@ -25,39 +25,40 @@
 
 | Extension Name                   | Status     | Performance | Notes/Replacement                                       |
 | -------------------------------- | ---------- | ----------- | ------------------------------------------------------- |
-| IntelliCode                      | Deprecated | 🔴 High     | Not available on VSCodium                               |
-| Minify                           | Deprecated | 🟡 Medium   | Not available on VSCodium                               |
-| Smart Column Indenter            | Deprecated | 🟢 Low      | Not available on VSCodium                               |
-| Auto Close Tag                   | Replaced   | 🟢 Low      | Native settings                                         |
-| Auto Commit Message              | Replaced   | 🟢 Low      | Keyboard shortcuts                                      |
-| Auto Rename Tag                  | Replaced   | 🟢 Low      | Native settings                                         |
-| Cody                             | Replaced   | 🔴 High     | Cline                                                   |
-| Continue                         | Replaced   | 🔴 High     | Cline                                                   |
-| Color Highlight                  | Replaced   | 🟢 Low      | Native settings                                         |
-| Material Icon Theme              | Replaced   | 🟢 Low      | Native settings                                         |
+| autoDocstring                    | Active     | 🟢 Low      | Generating docstrings for Python                        |
 | Black Formatter                  | Active     | 🟢 Low      | Python formatting                                       |
 | Bookmarks                        | Active     | 🟢 Low      | Code navigation                                         |
 | Cline                            | Active     | 🟡 Medium   | AI code assistant                                       |
-| Editor Config                    | Active     | 🟢 Low      | Maintain consistent coding styles                       |
 | ES7+ Snippets                    | Active     | 🟢 Low      | JavaScript and React/Redux snippets                     |
 | ESLint                           | Active     | 🟢 Low      | JavaScript and TypeScript linting and code quality tool |
 | isort                            | Active     | 🟢 Low      | Python import sorting                                   |
 | JavaScript ES6 snippets          | Active     | 🟢 Low      | JavaScript code snippets                                |
+| markdownlint                     | Active     | 🟢 Low      | Linting for Markdown files to ensure style consistency  |
+| Markdown Preview GitHub          | Active     | 🟢 Low      | GitHub-flavored Markdown preview                        |
 | Markdown Preview Mermaid Support | Active     | 🟢 Low      | Mermaid diagram support                                 |
-| Postman                          | Active     | 🟡 Medium   | API development and testing                             |
 | Prettier                         | Active     | 🟢 Low      | Code formatter                                          |
 | Python                           | Active     | 🟡 Medium   | Python development environment                          |
 | Python Debugger                  | Active     | 🟡 Medium   | Python debugging support                                |
 | Python Indent                    | Active     | 🟢 Low      | Python indentation                                      |
 | SVG                              | Active     | 🟢 Low      | SVG editing and visualization                           |
 | Tailwind CSS IntelliSense        | Active     | 🟡 Medium   | Tailwind CSS tooling                                    |
-| markdownlint                     | Active     | 🟢 Low      | Linting for Markdown files to ensure style consistency  |
-| Django                           | Active     | 🟡 Medium   | Django framework development                            |
-| Python Environment Manager       | Active     | 🟡 Medium   | Managing Python environments                            |
-| autoDocstring                    | Active     | 🟢 Low      | Generating docstrings for Python                        |
-| AREPL                            | Active     | 🟡 Medium   | Real-time Python code evaluation                        |
-| Markdown Preview GitHub          | Active     | 🟢 Low      | GitHub-flavored Markdown preview                        |
 | WakaTime                         | Active     | 🟢 Low      | Time tracking for developers                            |
+| AREPL                            | Standby    | 🟡 Medium   | Real-time Python code evaluation                        |
+| Django                           | Standby    | 🟡 Medium   | Django framework development                            |
+| Editor Config                    | Standby    | 🟢 Low      | Maintain consistent coding styles                       |
+| Postman                          | Standby    | 🟡 Medium   | API development and testing                             |
+| Python Environment Manager       | Standby    | 🟡 Medium   | Managing Python environments                            |
+| Auto Close Tag                   | Replaced   | 🟢 Low      | Native settings                                         |
+| Auto Commit Message              | Replaced   | 🟢 Low      | Keyboard shortcuts                                      |
+| Auto Rename Tag                  | Replaced   | 🟢 Low      | Native settings                                         |
+| Cody                             | Replaced   | 🔴 High     | Cline                                                   |
+| Color Highlight                  | Replaced   | 🟢 Low      | Native settings                                         |
+| Continue                         | Replaced   | 🔴 High     | Cline                                                   |
+| Material Icon Theme              | Replaced   | 🟢 Low      | Native settings                                         |
+| GitHub Copilot                   | Deprecated | 🟢 Low      | Not available on VSCodium                               |
+| IntelliCode                      | Deprecated | 🔴 High     | Not available on VSCodium                               |
+| Minify                           | Deprecated | 🟡 Medium   | Not available on VSCodium                               |
+| Smart Column Indenter            | Deprecated | 🟢 Low      | Not available on VSCodium                               |
 
 ---
 
