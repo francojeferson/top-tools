@@ -146,7 +146,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ![Latest XKCD Comic](xkcd_scraper/comics/latest_xkcd.jpg)
 
-> Language evolution connects biblical canon to modern fandom through shared human tendencies for categorization and
-> devotion.
+> Earth's seemingly ordinary natural phenomena are extraordinary cosmic coincidences.
 >
 > [_Checkout Extracted Wisdom from this Comic_](./xkcd_scraper/comics/xkcd_wisdom_output.md)

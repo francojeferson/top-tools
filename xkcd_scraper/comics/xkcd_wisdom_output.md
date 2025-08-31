@@ -2,132 +2,142 @@
 
 ## SUMMARY
 
-The explanation traces the evolution of the term "canon" from biblical origins to modern fandom usage and explores
-related concepts like "fandom" etymology and "Achilles' heel" references.
+Randall Munroe explains Earth's unique tides caused by our Moon, comparing them to seemingly outlandish natural
+phenomena.
 
 ## IDEAS
 
-- Canon originally distinguished accepted Bible books from apocryphal Christian works considered non-biblical.
-- The term later applied to Arthur Conan Doyle's Sherlock Holmes stories versus adaptations.
-- Ronald Knox's 1910 essay connected canon concepts to Sherlock Holmes literature.
-- Canon now broadly defines fiction accepted as created by original authors.
-- Star Wars canon includes Lucasfilm/Disney films and TV shows excluding other media.
-- Former Star Wars canon content was decanonized in 2014 for sequel movies.
-- Canon determination excites passionate disputes similar to religious factionalization.
-- Fandom derives from "fan" shortening "fanatic" meaning temple-inspired devotion.
-- Achilles' heel references the Greek warrior's sole vulnerable spot mythology.
-- Thetis dipped baby Achilles in the Styx river for invulnerability.
-- Achilles' held heel remained dry creating his fatal weakness.
-- Achilles died from an arrow shot precisely in his vulnerable heel.
-- Theological disputes produced extensive publications throughout several centuries.
-- Debates about baptism methods generated hundreds of pages across centuries.
-- Canon disputes mirror religious fervor in their intensity and divisiveness.
-- Modern fandom culture exhibits devotion comparable to religious fanaticism origins.
-- Language evolution shows how specialized terms expand into broader usage.
-- Narrative frameworks develop complex hierarchies of canonical authority.
-- Cultural concepts often originate from specific contexts before generalizing widely.
-- Historical etymology reveals surprising connections between disparate concepts.
-- Mythological references persist in contemporary language through symbolic meanings.
-- Community identity forms around shared acceptance of canonical materials.
-- Canonical status changes reflect shifting cultural values and priorities.
-- The human tendency to categorize creates authoritative versus non-authoritative distinctions.
+- Earth's tides are primarily caused by the Moon's gravitational pull
+- Our Moon is unusually large compared to other planets in our solar system
+- Earth's tidal configuration is unique within our solar system
+- The Moon causes Earth's ocean waters to rise and fall approximately twice daily
+- Tidal cycles occur in more than 6.2 hour intervals for ocean islands
+- Every 14.75 days, the Moon and Sun create higher high tides and lower low tides
+- The Sun influences Earth's tides but with less impact than the Moon
+- Without our Moon, tidal amplitudes would be about one-third of current levels
+- Other planets have moons, but none with such significant tidal effects on their planets
+- Charon, Pluto's largest moon, is tidal-locked with its planet unlike Earth and Moon
+- Earth's Moon has 1.2% of Earth's mass, the largest ratio of any full planetary moon
+- Coral islands form from skeletons or secretions of small marine animals
+- Lightning creates bright atmospheric electrical discharges
+- Butterflies undergo metamorphosis from caterpillars to winged adults
+- Lightning may have produced chemicals important for life's origins on Earth
+- Ozone from lightning reduces harmful UV radiation reaching Earth's surface
+- The aerobiome contains microscopic life that affects cloud formation and weather
+- Lightning occurs on Jupiter, Saturn, and possibly Uranus and Neptune
+- Lightning on Mars may form from electrical discharge in dust clouds
+- Coral islands, lightning, and metamorphosis seem as outlandish as tides
 
 ## INSIGHTS
 
-- Specialized terminology evolves through metaphorical extension across domains.
-- Modern fandoms exhibit devotion patterns resembling religious communities.
-- Mythological archetypes persistently shape contemporary linguistic expressions.
-- Canon creation reflects fundamental human need for authoritative narratives.
-- Linguistic evolution connects temple worship to contemporary fan cultures.
-- Vulnerability concepts endure through mythological storytelling traditions.
-- Historical controversies demonstrate consistent human passion for categorization.
-- Narrative authority fluctuates according to cultural and commercial forces.
-- Etymology reveals hidden connections between sacred and secular concepts.
-- Achilles' heel symbolizes universal human vulnerability despite apparent strength.
+- Earth's cosmic uniqueness makes familiar phenomena seem extraordinary to outsiders
+- Natural satellite size relative to its planet determines tidal influence magnitude
+- Solar system configurations create varied planetary tidal behaviors
+- Biological activity interacts with astronomical phenomena in complex ways
+- Atmospheric lightning may have facilitated life's transition from water to land
+- Microscopic atmospheric ecosystems influence larger weather patterns
+- Planetary characteristics that seem normal to us are often rare in the universe
+- Scientific understanding reveals the extraordinary nature of ordinary experiences
 
 ## QUOTES
 
-- "The termcanonwas originally devised to refer to the books of the Bible which are generally accepted as being actually
-  part of the Bible" - Explanation
-- "It subsequently was adapted to refer to theSherlock Holmesstories which were written byArthur Conan Doyle" -
+- "Cueball is wondering aloud what happened to an island, possibly as a sandbar that was visible earlier, but is not
+  anymore" - Explanation
+- "Megan explains to him that the tide has gone up, and thus the island is underwater" - Explanation
+- "She then tells him about what causes tides, namely the Moon, which is large enough and orbits close enough to Earth
+  to gravitationally affect the waters of our oceans" - Explanation
+- "Cueball is amazed at the oddity of our planet having a natural satellite large enough to affect our oceans" -
   Explanation
-- "Star Warscanon comprises the films and some TV shows made byLucasfilm(andDisneyafter its buyout of Lucasfilm)" -
+- "if the Moon didn't exist, it would sound extremely outlandish and sci-fi-like" - Explanation
+- "Tides on Earth would indeed seem strange and unusual to a visitor from almost anywhere else in the universe" -
   Explanation
-- "Determining what is canon and what is not in a narrative framework has a tendency to excite huge passions amongst
-  fans" - Explanation
-- "Cueball is using the modern meaning to describe a theological dispute from the 18th century whencanonhad only its
-  original, Biblical meaning" - Explanation
-- "There are many examples of fierce theological disputes that were recorded in pamphlets and books throughout the 16th
-  to 19th century" - Explanation
-- "the word "fandom" comes from the word "fan" (+ '-dom', as in a class of people)" - Explanation
-- "Fanatic's etymology, in turn, points to the latin word "fanaticus" meaning 'of a temple, inspired by a god'" -
+- "tides on Earth are largely the result of a single large moon (the Moon) orbiting the Earth at a relatively short
+  distance" - Explanation
+- "This configuration is unique within our solar system" - Explanation
+- "Its much larger tidal effect has actually resulted in mutual tidal locking so that Charon now orbits only above the
+  same part of Pluto" - Explanation
+- "The Sun's gravity has about half the influence on Earth's liquid water masses than the Moon does" - Explanation
+- "something that was originally fully revealed by a retreating tide could now be covered be the next rising one" -
   Explanation
-- "AnAchilles’ heelis the weak point of something or someone who is otherwise very strong" - Explanation
-- "Achilles, who as a baby was dipped into the riverStyxbyhis motherto make him invulnerable everywhere on his body that
-  the water touched" - Explanation
-- "his mother held him by the heel, which was thus vulnerable because it didn't enter the river" - Explanation
-- "Achilles later died after he was shot in that heel with an arrow" - Explanation
+- "this effect is even more pronounced every 14.75 days, as the Moon and Sun act together to create even higher high
+  tides and lower low tides" - Explanation
+- "The title text mentions other elements of life on Earth, saying they also seem as outlandish as tides" - Explanation
+- "coral islands, islands that build up from the skeletons or secretions of small animals" - Explanation
+- "lightning, when electrical discharge creates bright light in the atmosphere" - Explanation
+- "the metamorphosis of butterflies, when caterpillars create a chrysalis and come out as butterflies" - Explanation
 
 ## HABITS
 
-- Trace etymological roots to understand modern terminology evolution.
-- Examine how specialized terms expand into broader cultural usage.
-- Recognize mythological references in contemporary language patterns.
-- Note how communities form around shared canonical narratives.
-- Identify vulnerability metaphors derived from ancient mythology.
-- Observe passionate disputes around authoritative narrative determination.
-- Document historical controversies regarding categorical distinctions.
-- Analyze commercial influences on canonical narrative development.
-- Connect religious devotion patterns to contemporary fandom behaviors.
-- Study linguistic connections between sacred and secular concepts.
+- Observe natural phenomena with curiosity about their cosmic uniqueness
+- Compare local planetary features to universal astronomical contexts
+- Question assumptions about what is ordinary or extraordinary in nature
+- Investigate gravitational effects of celestial bodies on Earth systems
+- Study the relationship between astronomical events and biological processes
+- Examine how microscopic organisms influence larger planetary systems
+- Analyze the historical development of Earth's unique environmental conditions
+- Appreciate the interconnections between seemingly unrelated natural phenomena
+- Consider Earth's natural systems from extraterrestrial perspectives
+- Research the origins and development of planetary characteristics
+- Document the comparative rarity of Earth's specific configurations
+- Examine how biological and astronomical systems interact over time
+- Investigate the scientific principles underlying common natural experiences
+- Study the formation of landmasses through geological and biological processes
+- Understand the atmospheric electrical phenomena in planetary contexts
 
 ## FACTS
 
-- Canon originally distinguished accepted biblical texts from apocrypha.
-- The term canon expanded to Sherlock Holmes stories in 1910.
-- Star Wars canon was redefined when Disney acquired Lucasfilm.
-- Fandom derives from "fanatic" meaning temple-inspired devotion.
-- Achilles' only vulnerability was his unimmersed heel mythology.
-- Thetis dipped Achilles in the Styx for invulnerability magic.
-- Achilles died from an arrow wound in his vulnerable heel.
-- Theological disputes produced extensive literature over centuries.
-- Baptism method debates generated hundreds of pages historically.
-- Canon determination excites passions comparable to religious disputes.
-- Modern fandom exhibits devotion patterns resembling religious fervor.
-- Linguistic evolution connects temple worship to fan cultures.
+- Earth's tides are primarily caused by the Moon's gravitational pull on oceans
+- The Moon causes ocean waters to rise and fall approximately every 6.2 hours
+- The Sun contributes about half the Moon's gravitational effect on Earth's tides
+- The Moon contains 1.2% of Earth's mass, the largest ratio of any planetary moon
+- Earth's Moon is the fifth largest moon in our solar system by diameter
+- Mercury and Venus have no moons, while Mars has two small ones
+- Charon, Pluto's largest moon, is 12.2% the mass of its parent planet
+- Earth's Moon is about 20 times further from Earth than Charon is from Pluto
+- Tidal locking between Earth and Moon means the Moon always shows the same face
+- Higher high tides occur every 14.75 days when Moon and Sun align
+- Coral islands form from accumulated calcium carbonate secretions of marine life
+- Lightning produces ozone which reduces UV radiation reaching Earth's surface
+- The aerobiome contains atmospheric bacteria that facilitate ice crystal formation
+- Lightning occurs on Jupiter, Saturn, and possibly Neptune and Uranus
+- Martian lightning likely forms from electrical discharge in dust clouds
+- Evidence about lightning on Venus remains inconclusive
 
 ## REFERENCES
 
-- The Bible
-- Apocrypha
-- Sherlock Holmes stories
-- Arthur Conan Doyle
-- Ronald Knox's Studies in the Literature of Sherlock Holmes
-- Star Wars films
-- Lucasfilm
-- Disney
-- Star Wars expanded universe
-- Theological dispute pamphlets
-- Baptism debate literature
-- Greek mythology
-- Achilles legend
-- River Styx
-- Thetis
+- XKCD comics by Randall Munroe
+- Earth-Moon gravitational system
+- Oceanic tide patterns
+- Planetary satellite systems
+- Charon-Pluto tidal relationship
+- Solar system planetary comparisons
+- Coral island formation processes
+- Atmospheric lightning phenomena
+- Butterfly metamorphosis
+- Aerobiome studies
+- Ozone formation processes
+- Planetary weather systems -UV radiation science
+- Dust storm electricity
+- Planetary atmospheric science
+- Biological origins research
 
 ## ONE-SENTENCE TAKEAWAY
 
-Language evolution connects biblical canon to modern fandom through shared human tendencies for categorization and
-devotion.
+Earth's seemingly ordinary natural phenomena are extraordinary cosmic coincidences.
 
 ## RECOMMENDATIONS
 
-- Explore etymology to uncover surprising linguistic connections.
-- Recognize mythological archetypes in contemporary language usage.
-- Observe how communities form around shared canonical narratives.
-- Study historical controversies to understand categorical passions.
-- Analyze commercial influences on narrative authority changes.
-- Identify vulnerability metaphors rooted in ancient mythology.
-- Connect religious devotion patterns to fan community behaviors.
-- Document specialized terminology expansion across domains.
-- Examine how narrative frameworks establish authority hierarchies.
-- Appreciate how cultural concepts evolve from specific origins.
+- Study Earth's unique astronomical context to appreciate planetary rarity
+- Investigate gravitational relationships between celestial bodies
+- Examine how biological systems interact with astronomical phenomena
+- Consider the scientific explanations behind seemingly magical natural events
+- Explore how microscopic life influences global atmospheric patterns
+- Research the comparative formation of planetary satellite systems
+- Understand the scientific principles behind common natural experiences
+- Appreciate the specific conditions that allow Earth's life to thrive
+- Examine the historical development of Earth's environmental features
+- Consider how familiar phenomena would appear to extraterrestrial visitors
+- Study the interaction between Earth's geological and biological processes
+- Investigate the atmospheric electrical systems that support life on Earth
+- Analyze the tidal effects of different planetary configurations
+- Explore the rarity of Earth's specific cosmic conditions
