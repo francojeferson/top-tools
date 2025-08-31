@@ -158,6 +158,31 @@ primary, refined knowledge base for long-term use.
 - Noted that auto-formatting by the user's editor can affect spacing and alignment in markdown tables, which must be
   considered for future edits.
 
+## Memory Bank Review Process Enhancements
+
+- **Comprehensive Review Protocol**: Running through all memory bank files during updates ensures consistency and
+  accuracy across the entire knowledge base.
+- **Sequential Update Strategy**: Updating memory bank files in a logical sequence (projectbrief → progress →
+  activeContext → systemPatterns → techContext) maintains consistency and prevents conflicts.
+- **Cross-File Synchronization**: Ensuring changes in one file are reflected in related files is critical for
+  maintaining a cohesive project narrative.
+- **Context Window Monitoring**: Maintaining context window usage below 30% during memory bank updates improves task
+  execution efficiency and prevents mid-session interruptions.
+- **Documentation Freshness**: Regular updates (monthly or after significant changes) ensure the memory bank reflects
+  the current project state accurately.
+
+## Memory Bank Update Best Practices
+
+- **Date Stamping**: Always update the "Last Updated" date in memory bank files to track when reviews were conducted.
+- **Sequential File Updates**: Follow a logical order when updating multiple memory bank files to ensure consistency
+  across the system.
+- **Context Preservation**: Ensure that all updates maintain the original intent and context of the memory bank files
+  while adding new information.
+- **Active Tracking Focus**: Prioritize tracking changes in the `src/` directory over internal maintenance activities
+  for more valuable project documentation.
+- **Regular Maintenance Schedule**: Implement regular memory bank reviews (monthly or after significant changes) to
+  ensure ongoing accuracy and relevance.
+
 ---
 
 Date: 2025-06-03 Update: Memory Bank Reflection Enhancement

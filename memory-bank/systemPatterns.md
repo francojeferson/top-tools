@@ -106,4 +106,4 @@ up-to-date documentation, which are central to the project's system patterns.
 
 ## Notes
 
-- Last Updated: June 29, 2025
+- Last Updated: August 31, 2025
