@@ -193,5 +193,10 @@
   "javascript.updateImportsOnFileMove.enabled": "always",
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.suggest.autoImports": true,
-  "typescript.suggest.autoImports": true
+  "typescript.suggest.autoImports": true,
+
+  // Update settings
+  "update.enableWindowsBackgroundUpdates": false,
+  "update.mode": "none",
+  "update.showReleaseNotes": false
 }
