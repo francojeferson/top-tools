@@ -53,6 +53,8 @@
   "workbench.sideBar.location": "right",
   "workbench.iconTheme": "vs-minimal", // Native minimal theme
   "workbench.list.smoothScrolling": true,
+  "workbench.welcomePage.walkthroughs.openOnInstall": false,
+  "workbench.welcomePage.extraAnnouncements": false,
 
   // Python development settings
   "python.formatting.provider": "black",
