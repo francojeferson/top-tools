@@ -20,9 +20,9 @@
   "editor.semanticHighlighting.enabled": false,
   "editor.tabSize": 2,
   "editor.tabCompletion": "on",
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.detectIndentation": false,
-  "editor.wordSeparators": "`~!@#%^&*()=+[{]}\\|;:'\",.<>/?",
+  "editor.wordSeparators": "`~!@#%^&*()=+[{]}\\|;:'\",.\u003c\u003e/?",
   "editor.smoothScrolling": true,
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.stickyScroll.enabled": true,
@@ -43,7 +43,7 @@
   "editor.snippetSuggestions": "top",
 
   // Workbench settings
-  "workbench.colorTheme": "Visual Studio Dark",
+  "workbench.colorTheme": "Monokai Dimmed",
   "workbench.startupEditor": "newUntitledFile",
   "workbench.editor.labelFormat": "short",
   "workbench.statusBar.visible": true,
@@ -55,6 +55,8 @@
   "workbench.list.smoothScrolling": true,
   "workbench.welcomePage.walkthroughs.openOnInstall": false,
   "workbench.welcomePage.extraAnnouncements": false,
+  "workbench.editor.wrapTabs": true,
+  "workbench.editor.openPositioning": "last",
 
   // Python development settings
   "python.formatting.provider": "black",
@@ -90,7 +92,7 @@
     "*.vue": "vue",
     "*.py": "python"
   },
-  "files.trimTrailingWhitespace": true,
+  "files.trimTrailingWhitespace": false,
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.eol": "\n",
@@ -98,7 +100,7 @@
 
   // Window settings
   "window.title": "${rootName}",
-  "window.newWindowDimensions": "offset",
+  "window.newWindowDimensions": "inherit",
 
   // Search settings - Optimized for performance
   "search.useIgnoreFiles": true,
@@ -188,6 +190,10 @@
   "terminal.integrated.confirmOnKill": "never",
   "terminal.integrated.initialHint": false,
   "terminal.integrated.tabs.enabled": false,
+  "terminal.integrated.commandsToSkipShell": [
+    "kilo-code.new.agentManagerOpen",
+    "kilo-code.new.agentManager.showTerminal"
+  ],
 
   // JavaScript/TypeScript settings
   "javascript.updateImportsOnFileMove.enabled": "always",
@@ -198,5 +204,23 @@
   // Update settings
   "update.enableWindowsBackgroundUpdates": false,
   "update.mode": "none",
-  "update.showReleaseNotes": false
+  "update.showReleaseNotes": false,
+
+  // Kilo-code settings
+  "kilo-code.debug": false,
+  "kilo-code.allowedCommands": [
+    "git log",
+    "git diff",
+    "git show"
+  ],
+  "kilo-code.deniedCommands": [],
+  "kilo-code.new.autocomplete.enableAutoTrigger": true,
+  "kilo-code.new.autocomplete.enableSmartInlineTaskKeybinding": true,
+  "kilo-code.new.autocomplete.enableChatAutocomplete": true,
+  "kilo-code.new.browserAutomation.enabled": true,
+  "kilo-code.new.browserAutomation.headless": true,
+
+  // Telemetry and AI settings
+  "telemetry.telemetryLevel": "off",
+  "chat.agentsControl.enabled": false
 }
