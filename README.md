@@ -9,7 +9,7 @@ A curated collection of essential development tools, extensions, and configurati
 - [🌐 Browser Extensions](src/browser.md) - Productivity and development browser extensions
 - [🤖 ClineRules Instructions](src/clinerules.md) - Essential preset AI assistant rule files
 - [🔗 Favorite Links](/src/fav/) - Curated development resources and links
-- [⚙️ JSON Settings](src/settings.json) - VSCode configuration settings
+- [⚙️ JSON Settings](src/settings/settings.json) - VSCode configuration settings
 - [🔧 VSCode Extensions](src/vscode.md) - Essential extensions for VSCode/VSCodium development
 - [📌 Git Configuration](src/gitconfig.md) - Git configuration settings and files
 - [💻 Installed Windows Programs](src/windows.md) - List of installed Windows programs with links
@@ -22,7 +22,7 @@ A curated collection of essential development tools, extensions, and configurati
 
 1. Install [VSCodium](https://vscodium.com/) or VSCode
 2. Review the [active extensions list](src/vscode.md#active-extensions)
-3. Apply the [JSON settings](src/settings.json) to your editor
+3. Apply the [JSON settings](src/settings/settings.json) to your editor
 4. Configure native alternatives for replaced extensions
 5. Remove any deprecated extensions
 6. Verify extension compatibility
@@ -31,7 +31,7 @@ A curated collection of essential development tools, extensions, and configurati
 
 1. Install the recommended [browser extensions](src/browser.md)
 2. Configure extension settings for optimal workflow
-3. Import development bookmarks from [fav.html](/src/fav.html)
+3. Import development bookmarks from [fav.html](/src/fav/pvt-fav.html)
 4. Test extension functionality and performance
 
 ### Performance Optimization

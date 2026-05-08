@@ -50,7 +50,7 @@ assistants, with an emphasis on maintaining a structured memory bank for project
 
 ## Key Deliverables
 
-- **Repository Structure**: A well-organized GitHub repository ('c:/Users/DELLI5RTX/repos/top-tools') with directories
+- **Repository Structure**: A well-organized GitHub repository ('c:/Users/DELLI7/repos/top-tools') with directories
   for source documentation ('src/') and memory bank files ('memory-bank/').
 - **Memory Bank Files**: Core documentation files including 'projectbrief.md', 'productContext.md', 'activeContext.md',
   'systemPatterns.md', 'techContext.md', and 'progress.md', ensuring comprehensive project context.

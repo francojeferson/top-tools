@@ -32,11 +32,8 @@ reviewed and updated as needed to reflect the current state and objectives of th
 - **Community Engagement**: Develop mechanisms for community feedback and contributions to enhance the project's scope
   and relevance (Q3 2025 milestone).
 - **Cross-Platform Expansion**: Adapt Windows-specific configurations for macOS and Linux compatibility.
-
 - **Ongoing Tool Curation**: Continue identifying and documenting high-value tools and extensions to expand the
   repository's offerings.
-- **Community Engagement**: Develop mechanisms for community feedback and contributions to enhance the project's scope
-  and relevance (future milestone).
 - **Documentation Updates**: Regularly update memory bank files as new tools are added or project objectives evolve.
 - **Context Window Management**: Monitor context window usage during task execution to prevent context loss, adhering to
   thresholds for task handoff (40% early alert, 50% strong recommendation, 75% critical warning).

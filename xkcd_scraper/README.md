@@ -33,7 +33,7 @@ and `schedule` for task scheduling.
 2. **Check Saved Comics**: Comics are saved in the `comics` subdirectory within the `xkcd_scraper` folder. The file is
    named statically as `latest_xkcd.jpg`, overwriting the previous comic with each run.
 
-3. **Logs**: Check `xkcd_scraper.log` in the same directory for execution details and any errors that might occur.
+3. **Logs**: Logs are output to the console (stdout) for cleaner project directory structure.
 
 ## Notes
 

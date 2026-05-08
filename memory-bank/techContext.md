@@ -21,7 +21,7 @@ extensions, and VSCode configurations.
 
 ## Development Setup
 
-- **Repository Structure**: The project is hosted in a Git repository at `c:/Users/DELLI5RTX/repos/top-tools`, with key
+- **Repository Structure**: The project is hosted in a Git repository at `c:/Users/DELLI7/repos/top-tools`, with key
   directories including `memory-bank/` for documentation, `src/` for source files and categorized tool documentation.
 - **VSCode Configuration**: Specific settings and extensions are recommended and documented in `src/vscode.md` and
   `src/settings.json`. These configurations optimize VSCode for Markdown editing, Git integration, and project-specific
@@ -38,7 +38,7 @@ extensions, and VSCode configurations.
   are out of scope.
 - **Platform Specificity**: While tools are curated for cross-platform use, some configurations (e.g., file paths in
   VSCode settings) are Windows-specific due to the current development environment
-  (`c:/Users/DELLI5RTX/repos/top-tools`). Adjustments may be needed for other operating systems.
+  (`c:/Users/DELLI7/repos/top-tools`). Adjustments may be needed for other operating systems.
 - **Versioning**: Tools and extensions evolve rapidly, requiring frequent updates to documentation to prevent
   obsolescence. This imposes a constraint on maintaining up-to-date content.
 - **AI Integration Limits**: While AI tools assist in content generation, they must adhere to strict guidelines for
