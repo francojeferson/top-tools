@@ -4,6 +4,12 @@ A curated collection of essential development tools, extensions, and configurati
 
 ---
 
+## 🖼️ Latest XKCD Comic
+
+![Latest XKCD Comic](xkcd_scraper/comics/latest_xkcd.jpg)
+
+---
+
 ## 📋 Contents
 
 - [🌐 Browser Extensions](src/browser.md) - Productivity and development browser extensions
@@ -139,13 +145,3 @@ We welcome contributions to improve this toolset:
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 🖼️ Latest XKCD Comic
-
-![Latest XKCD Comic](xkcd_scraper/comics/latest_xkcd.jpg)
-
-> Earth's seemingly ordinary natural phenomena are extraordinary cosmic coincidences.
->
-> [_Checkout Extracted Wisdom from this Comic_](./xkcd_scraper/comics/xkcd_wisdom_output.md)
