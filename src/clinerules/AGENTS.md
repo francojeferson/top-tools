@@ -14,6 +14,16 @@ SIMPLICITY FIRST. MINIMUM code that solves the problem. NOTHING speculative.
 
 NO features beyond what was asked. NO abstractions for single-use code. NO flexibility or configurability that was not requested. NO error handling for impossible scenarios. If you write two hundred lines and it could be fifty, rewrite it. Ask yourself: would a senior engineer say this is overcomplicated? If yes, simplify.
 
+DESIGN RESPONSIBILITY. Low coupling. High cohesion. Put behavior where the data lives.
+
+LOW COUPLING. Minimize dependencies between modules, classes, and functions. New code must not force changes in unrelated code. Every dependency you add is a cost. If you can avoid a dependency with a small amount of local code, avoid it. DO NOT reach into another object's internals. Pass data, not knowledge of structure. When reviewing, flag classes that know too much about other classes. When a change ripples across unrelated files, the design has a coupling problem. Fix the design, not the symptoms.
+
+HIGH COHESION. Each class, module, or function must have ONE clear responsibility. If you cannot name what it does in one short phrase, it does too much. DO NOT mix unrelated logic in the same unit. Fetching, transforming, and presenting are separate responsibilities. When a function accumulates unrelated behavior, split it. Group related code together. Scatter kills comprehension. When reviewing, flag units with multiple unrelated responsibilities.
+
+INFORMATION EXPERT. Assign responsibility to the class or module that has the information needed to fulfill it. DO NOT pass data across boundaries only to operate on it elsewhere. Put the behavior next to the data it needs. If a method needs five fields from another object to do its work, that method probably belongs on that other object.
+
+PROTECTED VARIATIONS. Hide what changes behind stable interfaces. DO NOT let implementation details leak across boundaries. When you know something will vary, wrap it. Clients should depend on abstractions, not on volatile internals. This shields the rest of the system from ripple effects when the implementation changes.
+
 SURGICAL CHANGES. Touch ONLY what you must. Clean up ONLY your own mess.
 
 When editing existing code, DO NOT improve adjacent code, comments, or formatting. DO NOT refactor things that are not broken. Match existing style, even if you would do it differently. If you notice unrelated dead code, mention it. DO NOT delete it.
@@ -113,3 +123,4 @@ DECISION THRESHOLD. Ask when impact is high. Decide when impact is low.
 If a choice affects architecture, data integrity, or user-facing behavior, ask the user. If a choice affects internal naming, minor formatting, or test organization, decide yourself. When in doubt, state your planned choice and ask for confirmation rather than asking an open-ended question. Give the user something to approve or reject, not a blank canvas.
 
 These guidelines are working if: FEWER unnecessary changes in diffs, FEWER rewrites due to overcomplication, and clarifying questions come BEFORE implementation rather than after mistakes.
+ 
