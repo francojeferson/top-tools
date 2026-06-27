@@ -2,23 +2,32 @@
 # This file contains commands that are specific to the Bash shell
 # Best place for aliases and bash-related functions
 
-if [ -z "$SSH_AUTH_SOCK" ] ; then
-  eval `ssh-agent -s`
-  ssh-add ~/.ssh/delli5rtx_key
+# ssh-agent: reuse one persistent agent across shells (no leak, one passphrase prompt)
+env=~/.ssh/agent.env
+agent_load_env() { test -f "$env" && . "$env" >/dev/null; }
+agent_start() { (umask 077; ssh-agent >"$env"); . "$env" >/dev/null; }
+agent_load_env
+agent_state=$(ssh-add -l >/dev/null 2>&1; echo $?)   # 0=key loaded 1=no key 2=no agent
+if [ ! "$SSH_AUTH_SOCK" ] || [ "$agent_state" = 2 ]; then
+  agent_start; ssh-add ~/.ssh/YOURNAME_key
+elif [ "$agent_state" = 1 ]; then
+  ssh-add ~/.ssh/YOURNAME_key
 fi
+unset env
 
 # Git aliases
 alias gs='git status -sb'
 alias gcc='git checkout'
 alias gcm='git checkout master'
 alias gaa='git add --all'
-alias gc='git commit -m $2'
+gc() { git commit -m "$*"; }
 alias push='git push'
 alias gpo='git push origin'
 alias pull='git pull'
 alias clone='git clone'
-alias stash='git stash'
-alias pop='git stash pop'
+ssa() { git stash save "$*" -u && git stash apply; }
+alias sl='git stash list'
+alias sp='git stash pop'
 alias ga='git add'
 alias gb='git branch'
 alias gl="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
@@ -38,7 +47,14 @@ alias ll.='ls -la'
 alias lls='ls -la --sort=size'
 alias llt='ls -la --sort=time'
 alias rm='rm -iv'
-alias work='cd /c/Users/DELLI5RTX/repos'
+alias work='cd /c/Users/YOURNAME/repos'
+ver() {
+	echo "Node: $(node -v)"
+	echo "Java: $(java -version 2>&1 | head -n 1)"
+	echo "Python: $(python --version 2>&1)"
+	echo "ClaudeCode: $(claude -v)"
+	echo "OpenCode: $(opencode -v)"
+}
 
 # Bash shell settings
 # Typing a directory name just by itself will automatically change into that directory.

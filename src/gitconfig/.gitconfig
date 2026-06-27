@@ -28,7 +28,7 @@
 	enabled = true
 	autoupdate = true
 [core]
-	excludesfile = C:/Users/DELLI5RTX/.gitignore
+	excludesfile = C:/Users/YOURNAME/.gitignore
 	fsmonitor = true
 	untrackedCache = true
 	sshCommand = \"C:\\\\Program Files\\\\Git\\\\usr\\\\bin\\\\ssh.exe\"
@@ -41,7 +41,7 @@
 [pull]
 	rebase = true
 [user]
-	name = francojeferson
-	email = jefersonfranco@pm.me
+	name = YOURNAME
+	email = YOURNAME@email.com
 [alias]
 	difftofile = !git diff --cached > output.diff && echo \"Diff saved to output.diff\"

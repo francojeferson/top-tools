@@ -7,7 +7,7 @@
   "workbench.layoutControl.enabled": false,
   "workbench.panel.showLabels": false,
   "breadcrumbs.enabled": false,
-  "extensions.autoUpdate": false,
+  "extensions.autoUpdate": "off",
   "extensions.autoCheckUpdates": false,
   "extensions.ignoreRecommendations": true,
 
