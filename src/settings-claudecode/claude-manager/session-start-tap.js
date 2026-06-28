@@ -1,2 +1,123 @@
 #!/usr/bin/env node
-"use strict";var m=Object.create;var y=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var h=Object.getOwnPropertyNames;var g=Object.getPrototypeOf,A=Object.prototype.hasOwnProperty;var k=(t,n,r,e)=>{if(n&&typeof n=="object"||typeof n=="function")for(let s of h(n))!A.call(t,s)&&s!==r&&y(t,s,{get:()=>n[s],enumerable:!(e=w(n,s))||e.enumerable});return t};var d=(t,n,r)=>(r=t!=null?m(g(t)):{},k(n||!t||!t.__esModule?y(r,"default",{value:t,enumerable:!0}):r,t));var o=d(require("fs")),p=d(require("path")),l=d(require("os"));function v(){return new Promise(t=>{let n="";process.stdin.setEncoding("utf-8"),process.stdin.on("data",r=>{n+=r}),process.stdin.on("end",()=>{if(!n.trim()){t(null);return}try{t(JSON.parse(n))}catch{t(null)}}),process.stdin.on("error",()=>t(null))})}function u(t){return typeof t=="string"?t:""}function E(t){try{let n=o.readFileSync(t,"utf-8"),r=JSON.parse(n);if(!Array.isArray(r))return[];let e=Date.now(),s=1440*60*1e3;return r.filter(i=>{if(!i||typeof i!="object")return!1;let a=i.sessionId,c=i.ppid,f=i.ts;if(typeof a!="string"||typeof c!="number"||typeof f!="number"||e-f>s)return!1;try{return process.kill(c,0),!0}catch{return!1}})}catch{return[]}}async function S(){let t=await v();if(!t)return;let n=u(t.session_id);if(!n)return;let r=p.join(l.homedir(),".claude",".claude-manager"),e=p.join(r,"active-sessions.json");try{o.mkdirSync(r,{recursive:!0})}catch{return}let i=E(e).filter(c=>c.sessionId!==n),a={sessionId:n,ppid:process.ppid,cwd:u(t.cwd)||process.cwd(),transcriptPath:u(t.transcript_path),ts:Date.now()};i.push(a);try{o.writeFileSync(e,JSON.stringify(i),"utf-8")}catch{}}S();
+"use strict";
+
+// session-start-tap.js — Claude Code SessionStart hook
+//
+// Tracks active sessions in active-sessions.json for cross-session awareness.
+// Prunes stale entries (dead PIDs, entries older than 24h).
+//
+// Security hardening:
+//   - Symlink-safe writes (refuse reparse points, verify parent under HOME)
+//   - Size-capped reads
+//   - Strict field validation
+
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+const HOME = os.homedir();
+const CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR || path.join(HOME, '.claude');
+const MANAGER_DIR = path.join(CLAUDE_DIR, '.claude-manager');
+const SESSIONS_FILE = path.join(MANAGER_DIR, 'active-sessions.json');
+
+const MAX_FILE_SIZE = 64 * 1024; // 64KB cap on sessions file
+const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
+
+function safeString(v) {
+  return typeof v === 'string' ? v.slice(0, 512) : '';
+}
+
+function readStdin() {
+  return new Promise(resolve => {
+    let buf = '';
+    process.stdin.setEncoding('utf-8');
+    process.stdin.on('data', chunk => { buf += chunk; });
+    process.stdin.on('end', () => {
+      if (!buf.trim()) { resolve(null); return; }
+      try { resolve(JSON.parse(buf)); } catch { resolve(null); }
+    });
+    process.stdin.on('error', () => resolve(null));
+  });
+}
+
+function isAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch { return false; }
+}
+
+function readSessions() {
+  try {
+    const st = fs.lstatSync(SESSIONS_FILE);
+    if (st.isSymbolicLink()) return [];
+    if (st.size > MAX_FILE_SIZE) return [];
+    const raw = fs.readFileSync(SESSIONS_FILE, 'utf-8');
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+
+    const now = Date.now();
+    return arr.filter(entry => {
+      if (!entry || typeof entry !== 'object') return false;
+      if (typeof entry.sessionId !== 'string') return false;
+      if (typeof entry.ppid !== 'number') return false;
+      if (typeof entry.ts !== 'number') return false;
+      if (now - entry.ts > MAX_AGE_MS) return false;
+      return isAlive(entry.ppid);
+    });
+  } catch {
+    return [];
+  }
+}
+
+function safeWriteSessions(data) {
+  try {
+    fs.mkdirSync(MANAGER_DIR, { recursive: true });
+
+    // Verify directory is under HOME (Windows ownership check)
+    const realDir = fs.realpathSync(MANAGER_DIR);
+    const normalizedReal = path.resolve(realDir).toLowerCase();
+    const normalizedHome = path.resolve(HOME).toLowerCase();
+    if (!normalizedReal.startsWith(normalizedHome + path.sep) && normalizedReal !== normalizedHome) {
+      return;
+    }
+
+    // Refuse symlink target
+    try {
+      const st = fs.lstatSync(SESSIONS_FILE);
+      if (st.isSymbolicLink()) return;
+    } catch (e) {
+      if (e.code !== 'ENOENT') return;
+    }
+
+    // Atomic write
+    const tempPath = path.join(MANAGER_DIR, `active-sessions.${process.pid}.tmp`);
+    const fd = fs.openSync(tempPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL, 0o600);
+    try {
+      fs.writeSync(fd, JSON.stringify(data));
+    } finally {
+      fs.closeSync(fd);
+    }
+    fs.renameSync(tempPath, SESSIONS_FILE);
+  } catch {
+    // Silent fail
+  }
+}
+
+async function main() {
+  const input = await readStdin();
+  if (!input) return;
+
+  const sessionId = safeString(input.session_id);
+  if (!sessionId) return;
+
+  const sessions = readSessions().filter(s => s.sessionId !== sessionId);
+  sessions.push({
+    sessionId,
+    ppid: process.ppid,
+    cwd: safeString(input.cwd) || process.cwd(),
+    transcriptPath: safeString(input.transcript_path),
+    ts: Date.now()
+  });
+
+  safeWriteSessions(sessions);
+}
+
+main();
