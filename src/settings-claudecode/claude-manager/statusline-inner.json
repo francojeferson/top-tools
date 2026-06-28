@@ -1,0 +1,3 @@
+{
+  "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\YOURNAME\\.claude\\plugins\\marketplaces\\caveman\\src\\hooks\\caveman-statusline.ps1\""
+}

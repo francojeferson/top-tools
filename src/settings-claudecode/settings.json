@@ -1,12 +1,8 @@
 {
-  "env": {
-    "MCP_TIMEOUT": "120000"
-  },
-  "includeCoAuthoredBy": false,
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
@@ -17,24 +13,11 @@
     ],
     "SessionStart": [
       {
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "\"C:\\Program Files\\nodejs\\node.exe\" \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-activate.js\"",
-            "timeout": 5,
-            "statusMessage": "Loading caveman mode..."
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"C:\\Program Files\\nodejs\\node.exe\" \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-mode-tracker.js\"",
-            "timeout": 5,
-            "statusMessage": "Tracking caveman mode..."
+            "command": "\"C:\\Users\\YOURNAME\\.nvm\\versions\\node\\v24.14.0\\bin\\node.exe\" \"C:\\Users\\YOURNAME\\.claude\\.claude-manager\\session-start-tap.js\""
           }
         ]
       }
@@ -42,7 +25,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-statusline.ps1\""
+    "command": "node \"C:\\Users\\YOURNAME\\.claude\\.claude-manager\\statusline-tap.js\""
   },
   "enabledPlugins": {
     "caveman@caveman": true,
@@ -72,18 +55,21 @@
   },
   "spinnerTipsEnabled": false,
   "effortLevel": "xhigh",
-  "prefersReducedMotion": true,
   "theme": "dark",
+  "prefersReducedMotion": true,
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Bash(rtk grep *)",
-      "Bash(rtk find *)",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_snapshot",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__click",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__wait_for",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_screenshot",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__fill",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_pages",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__navigate_page",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__evaluate_script",
+      "Bash(rtk grep *)",
+      "Bash(rtk find *)",
       "Bash(rtk ls *)",
       "Bash(rtk git status *)",
       "Bash(rtk git diff *)",
