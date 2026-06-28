@@ -5,7 +5,7 @@ Adapt current caveman statusline to display OpenRouter API cost tracking (usage 
 
 ## Files to Modify
 
-### 1. `C:/Users/DELLI7/.claude/.claude-manager/statusline.json`
+### 1. `C:/Users/YOURNAME/.claude/.claude-manager/statusline.json`
 Add OpenRouter model info and context window data:
 ```json
 {
@@ -30,18 +30,18 @@ Add OpenRouter model info and context window data:
 }
 ```
 
-### 2. `C:/Users/DELLI7/.claude/.claude-manager/statusline-inner.json`
+### 2. `C:/Users/YOURNAME/.claude/.claude-manager/statusline-inner.json`
 Update command to use new TypeScript cost calculator (or keep PS1 wrapper with new logic):
 ```json
 {
-  "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\DELLI7\\.claude\\plugins\\marketplaces\\caveman\\src\\hooks\\caveman-statusline.ps1\""
+  "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\YOURNAME\\.claude\\plugins\\marketplaces\\caveman\\src\\hooks\\caveman-statusline.ps1\""
 }
 ```
 
-### 3. `C:/Users/DELLI7/.claude/plugins/marketplaces/caveman/src/hooks/caveman-statusline.ps1`
+### 3. `C:/Users/YOURNAME/.claude/plugins/marketplaces/caveman/src/hooks/caveman-statusline.ps1`
 Add OpenRouter cost reading from `statusline.json` and render cost suffix alongside caveman mode indicator.
 
-### 4. `C:/Users/DELLI7/.claude/.claude-manager/statusline-tap.js`
+### 4. `C:/Users/YOURNAME/.claude/.claude-manager/statusline-tap.js`
 Update `h()` parser to extract OpenRouter fields (`cost.total_cost_usd`, `context_window.used_percentage`, `context_window.context_window_size`) and update `w()` formatter to include cost in output.
 
 ## Implementation Steps
