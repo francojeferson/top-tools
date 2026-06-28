@@ -32,6 +32,7 @@ alias ga='git add'
 alias gb='git branch'
 alias gl="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias gm='git merge'
+alias gf='git fetch'
 
 # Bash aliases
 alias .='cd .'
@@ -39,7 +40,7 @@ alias ..='cd ..'
 alias ...='cd ../../'
 alias ....='cd ../../../'
 alias .....='cd ../../../../'
-alias bashclear='echo "" > ~/.bash_history'
+alias bls='echo "" > ~/.bash_history && history -c && clear'
 alias cls='clear'
 alias ls='ls -F --color=auto --show-control-chars'
 alias ll='ls -l'
@@ -93,3 +94,6 @@ shopt -s cmdhist
 # Append commands to the history file, instead of overwriting it.
 # History substitution are not immediately passed to the shell parser.
 shopt -s histappend histverify
+
+# opencode (npm global) on PATH
+export PATH="$PATH:$HOME/AppData/Roaming/npm"

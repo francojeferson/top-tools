@@ -17,7 +17,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"C:\\Users\\YOURNAME\\.claude\\.claude-manager\\session-start-tap.js\""
+            "command": "node \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-activate.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading caveman mode..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-mode-tracker.js\"",
+            "timeout": 5,
+            "statusMessage": "Tracking caveman mode..."
           }
         ]
       }
@@ -43,7 +57,10 @@
     "chrome-devtools-mcp@claude-plugins-official": true,
     "desktop-commander@claude-plugins-official": true,
     "code-modernization@claude-plugins-official": true,
-    "notion@claude-plugins-official": true
+    "notion@claude-plugins-official": true,
+    "jdtls-lsp@claude-plugins-official": true,
+    "atomic-agents@claude-plugins-official": true,
+    "ai-firstify@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
