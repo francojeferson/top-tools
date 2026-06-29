@@ -91,6 +91,7 @@
       "Bash(rtk find *)",
       "Bash(rtk ls *)",
       "Bash(rtk read *)",
+	  "Bash(rtk curl *)",
       "Bash(rtk git status *)",
       "Bash(rtk git diff *)",
       "Bash(rtk git log *)",
