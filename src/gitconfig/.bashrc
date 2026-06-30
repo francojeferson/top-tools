@@ -50,6 +50,7 @@ alias llt='ls -la --sort=time'
 alias rm='rm -iv'
 alias work='cd /c/Users/YOURNAME/repos'
 ver() {
+  echo "Git: $(git -v)"
 	echo "Node: $(node -v)"
 	echo "Java: $(java -version 2>&1 | head -n 1)"
 	echo "Python: $(python --version 2>&1)"
