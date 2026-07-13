@@ -1,12 +1,10 @@
-This is one of43 incomplete explanations:This page was created in a puff of magic blue smoke. Don't remove this notice too soon. If you can fix this issue,edit the page!
+This is one of42 incomplete explanations:This page was created in a puff of magic blue smoke. Don't remove this notice too soon. If you can fix this issue,edit the page!
 
-Intensive, or even unintentional, testing of hardware can occasionally result in overloading components, sometimes leading to heat damage or even a resulting fire.
+Intensive, or even unintentional, testing of hardware can occasionally result in overloading components, sometimes leading to heat damage or even a resulting fire. This comic suggests that engineers should fake out any such errors in judgement by pretending that any resulting fire was thedeliberateaim, treating the burning equipment as a campfire, over which they can roastmarshmallowson sticks.
 
-Engineers are, in this comic, being persuaded to fake any such errors in judgement out by pretending that any resulting fire is thedeliberateaim, as in treating the burning equipment as a camp fire that they can roast marshmallows on sticks over.
+CueballandMegan's conversation indicates that this is what happened here. It also (rightly) raises the concern that burningprinted circuit boards, and likely other plastics, might not produce the healthiest types of smoke within which to hold foodstuffs intended for consumption.
 
-CueballandMegan's conversation indicates that this is what happened here. It also (rightly) raises the concern that burning PCBs, and likely other plastics, might not produce the healthiest types of smoke within which to hold foodstuffs intended for consumption.
+The title text deals with equipment intended to be used in the case of a fire. One option is afire extinguisher, a valid tool for the event of a fire. The other, seeming to assume the fire is not worth putting out, perhaps being too strong to do so, instead is the equipment and ingredients required to exploit the fire to make the traditional campfire foods'mores.
 
-The title text deals with equipment intended to be used in the case of a fire. One option is a fire extinguisher, the other is the aforementioned marshmallows, sticks and other traditional campfire foods as a 'fire exploiter'.
-
-Toasting marshmallows in a lab environment has been previously referenced in2514: Lab Equipment.
+Toasting marshmallows in a lab environment has been previously referenced in2514: Lab Equipment, while another unorthodox method for toasting marshmallows was covered in2804: Marshmallow. An alternative use for marshmallows was covered in517: Marshmallow Gun.
 
