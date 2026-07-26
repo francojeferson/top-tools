@@ -1,12 +1,12 @@
-This is one of40 incomplete explanations:This page was created WITHOUT A HITCH. Don't remove this notice too soon. If you can fix this issue,edit the page!
+This is one of39 incomplete explanations:This page was created WITHOUT A HITCH. Don't remove this notice too soon. If you can fix this issue,edit the page!
 
 The comic depicts the supposed possibility of using the mechanical advantage of a "Recursive Trucker's Hitch", which is essentially a compoundblock and tacklesystem using only the rope, to generate sufficient pressure for atomic fusion. This would be impractical at best, due in part to the extreme speed at which the pulling end must move and the friction of rope-on-rope would be problematical.
 
-A "trucker's hitch" is aknottypically used for securing a load. It provides a theoretical 3:1 mechanical advantage, ignoring friction. The comic shows this hitch being used repeatedly for a supposed mechanical advantage that scales exponentially with the number of layers. After many layers, it is tied to and around a pair of connectors that, when pulled together, will smoosh a small circular object labeled as a "fusion pellet". The conceit of the comic is that by doing so, one could produce sufficient pressure to ignite fusion by using just a simple rope.
+A "trucker's hitch" is aknottypically used for securing a load. It provides a theoretical 3:1 mechanical advantage, ignoring friction. The comic shows this hitch being used repeatedly for a supposed mechanical advantage that scales exponentially with the number of layers. After many layers, it is tied to and around a pair of connectors that, when pulled together, will smoosh a small circular object labeled as a "fusion capsule". The conceit of the comic is that by doing so, one could produce sufficient pressure to ignite fusion by using just a simple rope.
 
 Obviously, this would not work.
 
 Some descriptions of the Trucker's Hitch require, for completeness, that the free end of the pulled knot be in turn tied to the exposed (non-knot) looped length, usually withtwo half-hitches. Whereas this compound knot seems to have no indicated intention to similarly tie off the whole structure in order to remain taut even when not being actively tended to.
 
-The title text mentions the exploits ofDavid Hahnwho attempted to build a nuclear reactor using theAmericium-241material sourced from ionization-typesmoke detectors. Hahn was a member of the Boy Scouts of America at the time, and the Boy Scouts are also known for teaching how to type many kinds of rope knots.
+The title text mentions the exploits ofDavid Hahnwho attempted to build a nuclear reactor using theamericium-241material sourced from ionization-typesmoke detectors. Hahn was a member of the Boy Scouts of America at the time, and the Boy Scouts are also known for teaching how to tie many kinds of rope knots.
 
