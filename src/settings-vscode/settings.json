@@ -129,8 +129,28 @@
   "git.enableSmartCommit": true,
   "git.ignoreRebaseWarning": true,
   "gitlens.hovers.currentLine.over": "line",
-  "gitlens.currentLine.enabled": false,
   "gitlens.codeLens.enabled": false,
+  "gitlens.currentLine.enabled": false,
+  "gitlens.fileAnnotations.command": "blame",
+  "gitlens.blame.format": "${date} ${author|12}",
+  "gitlens.blame.dateFormat": "MM/DD/YYYY",
+  "gitlens.blame.compact": false,
+  "gitlens.blame.separateLines": true,
+  "gitlens.blame.avatars": false,
+  "gitlens.blame.heatmap.enabled": false,
+  "gitlens.hovers.enabled": false,
+  "gitlens.hovers.avatars": false,
+  "gitlens.hovers.pullRequests.enabled": false,
+  "gitlens.hovers.autolinks.enabled": false,
+  "gitlens.hovers.autolinks.enhanced": false,
+  "gitlens.hovers.currentLine.enabled": false,
+  "gitlens.hovers.currentLine.details": false,
+  "gitlens.hovers.currentLine.changes": false,
+  "gitlens.hovers.annotations.enabled": false,
+  "gitlens.hovers.annotations.details": false,
+  "gitlens.hovers.annotations.changes": false,
+  "github.showAvatar": false,
+  "gitlens.currentLine.scrollable": false,
 
   // Prettier settings
   "prettier.trailingComma": "all",
@@ -221,5 +241,9 @@
 
   // Telemetry and AI settings
   "telemetry.telemetryLevel": "off",
-  "chat.agentsControl.enabled": false
+  "chat.agentsControl.enabled": false,
+  "diffEditor.ignoreTrimWhitespace": true,
+  "chat.titleBar.openInAgentsWindow.enabled": false,
+  "workbench.browser.showInTitleBar": false,
+  "window.commandCenter": false
 }
