@@ -148,3 +148,15 @@ export PATH="$PATH:$HOME/AppData/Roaming/Python/Python313/Scripts"
 
 # opencode (npm global) on PATH
 export PATH="$PATH:$HOME/AppData/Roaming/npm"
+
+# --- Toolchain: official Windows installers own node/python. ---
+# nvm + pyenv removed; node/python/claude come from the installer paths below
+# (claude installed globally on the installer node -> %APPDATA%\npm).
+
+# Node installer -> C:\Program Files\nodejs (node, npm, npx)
+[ -d "/c/Program Files/nodejs" ] && PATH="/c/Program Files/nodejs:$PATH"
+
+# Python installer (PyManager 3.14+) -> %LOCALAPPDATA%\Python\bin (python, pip shims)
+[ -d "$HOME/AppData/Local/Python/bin" ] && PATH="$HOME/AppData/Local/Python/bin:$PATH"
+
+export PATH
