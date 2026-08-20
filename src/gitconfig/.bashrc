@@ -4,12 +4,20 @@
 
 # ssh-agent: reuse one persistent agent across shells (no leak, one passphrase prompt)
 env=~/.ssh/agent.env
-agent_load_env() { test -f "$env" && . "$env" >/dev/null; }
-agent_start() { (umask 077; ssh-agent >"$env"); . "$env" >/dev/null; }
+agent_load_env() {
+  test -f "$env" && . "$env" >/dev/null
+}
+
+agent_start() {
+  (umask 077; ssh-agent >"$env")
+  . "$env" >/dev/null
+}
+
 agent_load_env
-agent_state=$(ssh-add -l >/dev/null 2>&1; echo $?)   # 0=key loaded 1=no key 2=no agent
+agent_state=$(ssh-add -l >/dev/null 2>&1; echo $?) # 0=key loaded 1=no key 2=no agent
 if [ ! "$SSH_AUTH_SOCK" ] || [ "$agent_state" = 2 ]; then
-  agent_start; ssh-add ~/.ssh/YOURNAME_key
+  agent_start
+  ssh-add ~/.ssh/YOURNAME_key
 elif [ "$agent_state" = 1 ]; then
   ssh-add ~/.ssh/YOURNAME_key
 fi
@@ -20,12 +28,18 @@ alias gs='git status -sb'
 alias gcc='git checkout'
 alias gcm='git checkout master'
 alias gaa='git add --all'
-gc() { git commit -m "$*"; }
+gc() {
+  git commit -m "$*"
+}
+
 alias push='git push'
 alias gpo='git push origin'
 alias pull='git pull'
 alias clone='git clone'
-ssa() { git stash save "$*" -u && git stash apply; }
+ssa() {
+  git stash save "$*" -u && git stash apply
+}
+
 alias sl='git stash list'
 alias sp='git stash pop'
 alias ga='git add'
@@ -35,7 +49,7 @@ alias gm='git merge'
 alias gf='git fetch'
 
 # Bash aliases
-alias .='cd .'
+alias cdd='cd .'
 alias ..='cd ..'
 alias ...='cd ../../'
 alias ....='cd ../../../'
@@ -51,11 +65,41 @@ alias rm='rm -iv'
 alias work='cd /c/Users/YOURNAME/repos'
 ver() {
   echo "Git: $(git -v)"
-	echo "Node: $(node -v)"
-	echo "Java: $(java -version 2>&1 | head -n 1)"
-	echo "Python: $(python --version 2>&1)"
-	echo "ClaudeCode: $(claude -v)"
-	echo "OpenCode: $(opencode -v)"
+  echo "Node: $(node -v)"
+  echo "npm: $(npm -v)"
+  echo "Java: $(java -version 2>&1 | head -n 1)"
+  echo "Gradle: $(basename "$(ls /c/Users/YOURNAME/Documents/Tools/gradle-*/lib/gradle-launcher-*.jar 2>/dev/null)" .jar | sed 's/gradle-launcher-//')"
+  echo "Python: $(python --version 2>&1)"
+  echo "pip: $(pip --version 2>&1 | sed 's/pip \([0-9.]*\).*/\1/')"
+  echo "UV: $(uvx --version 2>&1)"
+  echo "ClaudeCode: $(claude -v 2>/dev/null)"
+  echo "OpenCode: $(opencode -v 2>/dev/null)"
+}
+
+verup() {
+  echo "--------------------"
+  echo "Updating npm..."
+  echo "--------------------"
+  npm install -g npm@latest
+  echo "--------------------"
+  echo "Updating pip..."
+  echo "--------------------"
+  python -m pip install --upgrade pip
+  echo "--------------------"
+  echo "Updating uv..."
+  echo "--------------------"
+  pip install --upgrade uv
+  echo "--------------------"
+  echo "Updating claude..."
+  echo "--------------------"
+  npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
+  echo "--------------------"
+  echo "Updating opencode..."
+  echo "--------------------"
+  npm install -g --allow-scripts=opencode-ai opencode-ai@latest
+  echo "--------------------"
+  echo "End of updates!"
+  echo "--------------------"
 }
 
 # Bash shell settings
@@ -95,6 +139,12 @@ shopt -s cmdhist
 # Append commands to the history file, instead of overwriting it.
 # History substitution are not immediately passed to the shell parser.
 shopt -s histappend histverify
+
+# Node (outside orca where %NODE_HOME% doesn't expand)
+export PATH="/c/Users/YOURNAME/Documents/Tools/node-v22:$PATH"
+
+# Python user scripts (uv, uvx)
+export PATH="$PATH:$HOME/AppData/Roaming/Python/Python313/Scripts"
 
 # opencode (npm global) on PATH
 export PATH="$PATH:$HOME/AppData/Roaming/npm"
