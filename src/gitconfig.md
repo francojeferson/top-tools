@@ -7,10 +7,15 @@
 The `src/gitconfig/` directory contains optimized configuration files:
 
 - **`.gitconfig`**: Core Git settings (branch sorting, auto-setup, aliases)
+- **`.gitconfig.local.example`**: Template for your name and email (never committed)
 - **`.bashrc`**: Shell environment + Git/workflow aliases
+- **`.bashrc.local.example`**: Template for per-machine values (SSH key, repo dir)
 - **`.bash_profile`**: Loads .bashrc settings
 - **`.inputrc`**: Terminal input customization
 - **`git-prompt.sh`**: Custom Git Bash prompt
+
+For step-by-step install and configuration instructions, see
+[`src/gitconfig/README.md`](gitconfig/README.md).
 
 ---
 

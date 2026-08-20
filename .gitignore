@@ -1,3 +1,8 @@
 # AI assistant context and rules
 # .memory-bank/
 # .clinerules/
+
+# Machine-specific config (private SSH key name, email address).
+# Only the *.example templates are tracked.
+.bashrc.local
+.gitconfig.local

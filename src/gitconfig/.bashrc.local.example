@@ -1,0 +1,19 @@
+# Machine-specific overrides for ~/.bashrc
+#
+# Copy this file to ~/.bashrc.local and edit the values. It is sourced FIRST by
+# ~/.bashrc, so anything set here wins over the defaults in that file.
+#
+# NEVER commit your real ~/.bashrc.local -- it names your private key.
+#
+# Every value below is optional. Delete a line and ~/.bashrc falls back to its
+# default, shown in the comment.
+
+# SSH key that ssh-agent loads at shell start.  Default: $HOME/.ssh/id_ed25519
+# Run `ls ~/.ssh/*.pub` to see which keys you have, then drop the .pub suffix.
+SSH_KEY=$HOME/.ssh/id_ed25519
+
+# Where the `work` alias takes you.            Default: $HOME/repos
+REPOS=$HOME/repos
+
+# Where you unpack tools like gradle and node. Default: $HOME/Documents/Tools
+TOOLS=$HOME/Documents/Tools

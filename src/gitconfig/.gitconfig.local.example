@@ -1,0 +1,26 @@
+# Machine-specific overrides for ~/.gitconfig
+#
+# Copy this file to ~/.gitconfig.local and fill in your identity. It is pulled in
+# by the [include] directive at the end of ~/.gitconfig, so values here win.
+#
+# NEVER commit your real ~/.gitconfig.local -- it holds your email address.
+#
+# ~/.gitconfig intentionally ships with NO [user] section. If you skip this file,
+# git refuses the first commit with "Please tell me who you are" instead of
+# silently attributing your work to a placeholder name.
+
+[user]
+	name = Your Name
+	email = you@example.com
+
+# Optional: only if Git is NOT installed at C:\Program Files\Git.
+# This forces git to use Git Bash's ssh, which shares the ssh-agent that
+# ~/.bashrc starts. Windows' own ssh.exe does not.
+# [core]
+# 	sshCommand = \"C:\\\\Program Files\\\\Git\\\\usr\\\\bin\\\\ssh.exe\"
+
+# Optional: per-machine signing key.
+# [user]
+# 	signingkey = ABCD1234
+# [commit]
+# 	gpgsign = true

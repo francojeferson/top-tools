@@ -28,7 +28,7 @@
 	enabled = true
 	autoupdate = true
 [core]
-	excludesfile = C:/Users/YOURNAME/.gitignore
+	excludesfile = ~/.gitignore
 	fsmonitor = true
 	untrackedCache = true
 	sshCommand = \"C:\\\\Program Files\\\\Git\\\\usr\\\\bin\\\\ssh.exe\"
@@ -40,8 +40,11 @@
 	conflictstyle = zdiff3
 [pull]
 	rebase = true
-[user]
-	name = YOURNAME
-	email = YOURNAME@email.com
 [alias]
 	difftofile = !git diff --cached > output.diff && echo \"Diff saved to output.diff\"
+# Your name and email live in ~/.gitconfig.local, which is never committed.
+# See .gitconfig.local.example. Deliberately LAST: git resolves duplicate keys
+# last-wins, so an include placed earlier would be overridden by this file.
+# A missing ~/.gitconfig.local is silently ignored by git.
+[include]
+	path = ~/.gitconfig.local
