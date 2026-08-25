@@ -1,22 +1,68 @@
-# OpenRouter Statusline Adaptation Plan
+# Statusline: OpenRouter Cost Tracking
 
-## Goal
-Adapt current caveman statusline to display OpenRouter API cost tracking (usage %, context size, total USD cost) like the reference repo.
+Status: **shipped**. This documents the statusline as it currently works.
 
-## Files to Modify
+Cost, context usage, and rate-limit percentages are rendered by
+`statusline-tap.js`. There is no external plugin dependency — an earlier
+version delegated the left-hand segment to a third-party plugin script, which
+has since been removed.
 
-### 1. `C:/Users/YOURNAME/.claude/.claude-manager/statusline.json`
-Add OpenRouter model info and context window data:
+## Pipeline
+
+```
+Claude Code → stdin (JSON) → statusline-tap.js
+                               ├─ parse + normalize
+                               ├─ persist snapshot → statusline.json
+                               ├─ run optional inner command (statusline-inner.json)
+                               └─ combine: "<inner>  ·  <tap output>"
+```
+
+## Files
+
+### 1. `C:/Users/YOURNAME/.claude/settings.json`
+
+Wires the tap in as the statusline command:
+
 ```json
 {
-  "model": {
-    "id": "openrouter/free[1m]",
-    "displayName": "openrouter/free[1m]"
-  },
-  "context": {
-    "usedPercent": 7,
-    "size": 1000000
-  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"C:\\Users\\YOURNAME\\.claude\\.claude-manager\\statusline-tap.js\""
+  }
+}
+```
+
+### 2. `C:/Users/YOURNAME/.claude/.claude-manager/statusline-tap.js`
+
+Does the work. `parse()` pulls `model.display_name`,
+`context_window.used_percentage`, `context_window.context_window_size`,
+`cost.total_cost_usd`, and `rate_limits.{five_hour,seven_day}.used_percentage`
+off the stdin payload. `format()` joins the non-null pieces with `  ·  `:
+
+```
+Opus 5  ·  ctx 12%  ·  5h 4%  ·  7d 9%  ·  $3.52
+```
+
+Hardening worth preserving on any edit:
+
+- Symlink-safe atomic writes — refuses reparse points, verifies the parent
+  directory resolves under `$HOME`, writes temp + rename at mode `0600`
+- Control-character stripping on every display string (blocks ANSI/OSC
+  injection into the terminal), capped at 64 chars
+- Inner-command output capped at 512 bytes, 5s timeout, `windowsHide`
+- Strict type coercion on all parsed fields; malformed stdin yields empty
+  output rather than throwing
+
+### 3. `C:/Users/YOURNAME/.claude/.claude-manager/statusline.json`
+
+Normalized snapshot the tap writes on every render, for other tooling to read:
+
+```json
+{
+  "capturedAt": 1787663247694,
+  "version": "2.1.231",
+  "model": { "id": "claude-opus-5", "displayName": "Opus 5" },
+  "context": { "usedPercent": 12.4, "size": 1000000 },
   "cost": {
     "totalUsd": 3.5196655,
     "durationMs": 639959,
@@ -24,34 +70,35 @@ Add OpenRouter model info and context window data:
     "linesRemoved": 0
   },
   "rateLimits": {
-    "fiveHour": null,
-    "sevenDay": null
+    "fiveHour": { "usedPercent": 4, "resetsAt": 0 },
+    "sevenDay": { "usedPercent": 9, "resetsAt": 0 }
   }
 }
 ```
 
-### 2. `C:/Users/YOURNAME/.claude/.claude-manager/statusline-inner.json`
-Update command to use new TypeScript cost calculator (or keep PS1 wrapper with new logic):
+### 4. `C:/Users/YOURNAME/.claude/.claude-manager/statusline-inner.json`
+
+Optional prefix segment. Empty means the tap renders alone:
+
 ```json
 {
-  "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\YOURNAME\\.claude\\plugins\\marketplaces\\caveman\\src\\hooks\\caveman-statusline.ps1\""
+  "command": ""
 }
 ```
 
-### 3. `C:/Users/YOURNAME/.claude/plugins/marketplaces/caveman/src/hooks/caveman-statusline.ps1`
-Add OpenRouter cost reading from `statusline.json` and render cost suffix alongside caveman mode indicator.
+To add a prefix badge, point `command` at a script that prints one short line
+to stdout. It receives the same stdin JSON as the tap and its output is
+prepended, separated by `  ·  `. Keep it under 512 bytes and fast — it runs on
+every keystroke.
 
-### 4. `C:/Users/YOURNAME/.claude/.claude-manager/statusline-tap.js`
-Update `h()` parser to extract OpenRouter fields (`cost.total_cost_usd`, `context_window.used_percentage`, `context_window.context_window_size`) and update `w()` formatter to include cost in output.
+## Verifying a change
 
-## Implementation Steps
+Pipe a sample payload in via a file (a PowerShell `|` into node mangles stdin):
 
-1. [ ] Update `statusline.json` with OpenRouter structure
-2. [ ] Modify `statusline-tap.js` parser (`h()`) to read new fields
-3. [ ] Update formatter (`w()`) to append cost: `$3.52`
-4. [ ] Test statusline renders correctly in Claude Code
+```powershell
+'{"model":{"display_name":"Opus 5"},"context_window":{"used_percentage":12.4,"context_window_size":1000000},"cost":{"total_cost_usd":3.52},"rate_limits":{"five_hour":{"used_percentage":4},"seven_day":{"used_percentage":9}}}' |
+  Out-File -FilePath sl.json -Encoding ascii -NoNewline
+cmd /c "node statusline-tap.js < sl.json"
+```
 
-## Success Criteria
-- Statusline shows: `[CAVEMAN] ctx 7% · 5h 0% · 7d 0% · $3.52`
-- No breaking changes to existing caveman mode display
-- Cost updates in real-time as tokens consumed
+Expected: `Opus 5  ·  ctx 12%  ·  5h 4%  ·  7d 9%  ·  $3.52`

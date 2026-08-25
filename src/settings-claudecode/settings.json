@@ -10,31 +10,6 @@
           }
         ]
       }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-activate.js\"",
-            "timeout": 5,
-            "statusMessage": "Loading caveman mode..."
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"C:\\Users\\YOURNAME\\.claude\\hooks\\caveman-mode-tracker.js\"",
-            "timeout": 5,
-            "statusMessage": "Tracking caveman mode..."
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -42,7 +17,6 @@
     "command": "node \"C:\\Users\\YOURNAME\\.claude\\.claude-manager\\statusline-tap.js\""
   },
   "enabledPlugins": {
-    "caveman@caveman": true,
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
@@ -61,14 +35,6 @@
     "jdtls-lsp@claude-plugins-official": true,
     "atomic-agents@claude-plugins-official": true,
     "ai-firstify@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    }
   },
   "spinnerTipsEnabled": false,
   "effortLevel": "xhigh",
