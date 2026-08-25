@@ -101,7 +101,7 @@ ver() {
   echo "Java: $(_ver java -version)"
   echo "Gradle: $(_ver_gradle)"
   echo "Python: $(_ver python --version)"
-  echo "pip: $(_ver pip --version | sed 's/pip \([0-9.]*\).*/\1/')"
+  echo "pip: $(_ver python -m pip --version | sed 's/pip \([0-9.]*\).*/\1/')"
   echo "UV: $(_ver uvx --version)"
   echo "ClaudeCode: $(_ver claude -v)"
   echo "OpenCode: $(_ver opencode -v)"
@@ -125,13 +125,25 @@ _upd() {
   fi
 }
 
+# uv's updater depends on install source: WinGet-managed copies refuse
+# `uv self update`, and standalone installs have no WinGet package to upgrade.
+_upd_uv() {
+  _hr "Updating uv..."
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "uv not installed - skipped"
+  elif command -v winget >/dev/null 2>&1 &&
+       winget list --id astral-sh.uv -e --accept-source-agreements >/dev/null 2>&1; then
+    winget upgrade --id astral-sh.uv -e --accept-source-agreements
+  else
+    uv self update
+  fi
+}
+
 # Update every tool in the toolchain. Skips whatever is not installed.
-# NOTE: uv updates itself. `pip install --upgrade uv` would upgrade a copy in
-# the Python Scripts dir, which is not the uv that standalone installs put on PATH.
 verup() {
   _upd npm npm install -g npm@latest
   _upd pip python -m pip install --upgrade pip
-  _upd uv uv self update
+  _upd_uv
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
   _upd opencode npm install -g --allow-scripts=opencode-ai opencode-ai@latest
   _hr "End of updates!"
