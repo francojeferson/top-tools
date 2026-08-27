@@ -126,7 +126,8 @@ _upd() {
 }
 
 # uv's updater depends on install source: WinGet-managed copies refuse
-# `uv self update`, and standalone installs have no WinGet package to upgrade.
+# `uv self update`, pip-managed copies must be upgraded with pip, and
+# standalone installs have no WinGet package to upgrade.
 _upd_uv() {
   _hr "Updating uv..."
   if ! command -v uv >/dev/null 2>&1; then
@@ -134,6 +135,8 @@ _upd_uv() {
   elif command -v winget >/dev/null 2>&1 &&
        winget list --id astral-sh.uv -e --accept-source-agreements >/dev/null 2>&1; then
     winget upgrade --id astral-sh.uv -e --accept-source-agreements
+  elif python -m pip show uv >/dev/null 2>&1; then
+    python -m pip install --upgrade uv
   else
     uv self update
   fi
