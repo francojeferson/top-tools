@@ -76,6 +76,7 @@ alias ll.='ls -la'
 alias lls='ls -la --sort=size'
 alias llt='ls -la --sort=time'
 alias rm='rm -iv'
+alias init='work && clean -f && verup && ver'
 alias work='cd "$REPOS"'
 
 # Print a tool's version, or "not installed" if it is absent.
@@ -205,3 +206,93 @@ shopt -s histappend histverify
 [ -d "$HOME/AppData/Local/Python/bin" ] && PATH="$HOME/AppData/Local/Python/bin:$PATH"
 
 export PATH
+
+# --- Cache / temp cleanup ---------------------------------------------------
+# clean      dry run: list what would be removed, delete nothing (default)
+# clean -f   actually delete, then report the space reclaimed
+#
+# User-scoped on purpose: nothing here needs admin, so C:\Windows\Temp is left
+# alone (this account is denied it anyway).
+#
+# Sizes come from a free-space delta, not `du` -- walking npm-cache's 61k files
+# through the MSYS layer takes minutes, while `df` is instant.
+#
+# Deliberately NOT touched:
+#   ~/.cache/whisper          model weights, ~1.5G to re-download
+#   ~/.cache/puppeteer        pinned browser builds tools expect to be present
+#   WinGet\Packages           real installs live here (uv included), not a cache
+#   JetBrains */caches,index  wiping these forces a full project re-index
+#   node_modules              build input, not cache -- drop it per project
+
+CLEAN_TEMP_DAYS="${CLEAN_TEMP_DAYS:-3}"   # temp files newer than this are kept
+
+# Free MB on C:, used to measure what a run actually reclaimed.
+_clean_free() { df -m /c | awk 'NR==2 {print $4}'; }
+
+# `rm` is aliased to `rm -iv` above, and bash expands aliases inside function
+# bodies at parse time, so a bare `rm -rf` here would prompt for every file.
+# `command rm` bypasses the alias.
+_clean_rm() { command rm -rf -- "$@" 2>/dev/null; }
+
+# _clean_dir <label> <path> - drop a cache directory if it is there.
+_clean_dir() {
+  [ -d "$2" ] || return 0
+  printf '  %-26s %s\n' "$1" "${2#$HOME/}"
+  [ -n "$CLEAN_DRY" ] || _clean_rm "$2"
+}
+
+# _clean_tool <label> <path> <cmd...> - let the tool evict its own cache so its
+# index stays consistent, instead of rm-ing out from under it.
+_clean_tool() {
+  local label=$1 path=$2; shift 2
+  command -v "$1" >/dev/null 2>&1 || return 0
+  [ -d "$path" ] || return 0
+  printf '  %-26s %s\n' "$label" "$*"
+  [ -n "$CLEAN_DRY" ] || "$@" >/dev/null 2>&1
+}
+
+clean() {
+  local CLEAN_DRY=1 before after
+  local la="$HOME/AppData/Local" ra="$HOME/AppData/Roaming"
+  [ "$1" = "-f" ] && CLEAN_DRY=""
+  before=$(_clean_free)
+
+  _hr "${CLEAN_DRY:+DRY RUN - }Package manager caches"
+  _clean_tool "npm"                 "$la/npm-cache"          npm cache clean --force
+  _clean_tool "uv"                  "$la/uv/cache"           uv cache clean
+  _clean_tool "pip"                 "$la/pip/Cache"          python -m pip cache purge
+
+  _hr "Browser / MCP caches"
+  _clean_dir  "chrome cache"        "$la/Google/Chrome/User Data/Default/Cache"
+  _clean_dir  "chrome code cache"   "$la/Google/Chrome/User Data/Default/Code Cache"
+  _clean_dir  "chrome gpu cache"    "$la/Google/Chrome/User Data/Default/GPUCache"
+  _clean_dir  "edge cache"          "$la/Microsoft/Edge/User Data/Default/Cache"
+  _clean_dir  "edge code cache"     "$la/Microsoft/Edge/User Data/Default/Code Cache"
+  _clean_dir  "playwright-mcp"      "$la/ms-playwright-mcp"
+  _clean_dir  "chrome-devtools-mcp" "$HOME/.cache/chrome-devtools-mcp"
+
+  _hr "Editor caches"
+  _clean_dir  "vscode cache"        "$ra/Code/Cache"
+  _clean_dir  "vscode cacheddata"   "$ra/Code/CachedData"
+  _clean_dir  "vscode vsix"         "$ra/Code/CachedExtensionVSIXs"
+  _clean_dir  "vscode logs"         "$ra/Code/logs"
+
+  _hr "Temp + dumps"
+  _clean_dir  "crash dumps"         "$la/CrashDumps"
+  if [ -d "$la/Temp" ]; then
+    printf '  %-26s %s\n' "temp" "files older than ${CLEAN_TEMP_DAYS}d"
+    # Files first, then the directories they emptied; anything a running
+    # process still holds open simply fails and is left in place.
+    [ -n "$CLEAN_DRY" ] || {
+      find "$la/Temp" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type f -delete 2>/dev/null
+      find "$la/Temp" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type d -empty -delete 2>/dev/null
+    }
+  fi
+
+  if [ -n "$CLEAN_DRY" ]; then
+    _hr "Nothing deleted. Run 'clean -f' to do it."
+  else
+    after=$(_clean_free)
+    _hr "Reclaimed $(( after - before )) MB -- $(( after / 1024 )) GB free on C:"
+  fi
+}
