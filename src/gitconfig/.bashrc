@@ -219,7 +219,11 @@ export PATH
 #
 # Deliberately NOT touched:
 #   ~/.cache/whisper          model weights, ~1.5G to re-download
-#   ~/.cache/puppeteer        pinned browser builds tools expect to be present
+#   $ra/uv/python             uv-managed interpreters: an install, not a cache
+#   $ra/Code/User             settings.json, snippets, globalStorage
+#   $ra/VSCodium/User         settings, snippets, globalStorage, local file History
+#   $ra/VSCodium/WebStorage   extension state, not a cache
+#   $la/Pub/Cache/bin         `dart pub global activate` installs
 #   WinGet\Packages           real installs live here (uv included), not a cache
 #   JetBrains */caches,index  wiping these forces a full project re-index
 #   node_modules              build input, not cache -- drop it per project
@@ -251,6 +255,52 @@ _clean_tool() {
   [ -n "$CLEAN_DRY" ] || "$@" >/dev/null 2>&1
 }
 
+# _clean_gone <label> <path> <cmd> - a cache left behind by a tool that is no
+# longer installed. Skipped while the tool is still present, so reinstalling it
+# puts the directory back under its own management.
+_clean_gone() {
+  command -v "$3" >/dev/null 2>&1 && return 0
+  _clean_dir "$1" "$2"
+}
+
+# file:// URI -> a path [ -d ] can test. Byte-wise, so a percent escape above
+# 7F would decode to mojibake; _clean_ws_orphans refuses those rather than
+# mistake a live folder for a dead one.
+_clean_uri_path() {
+  printf '%s' "${1#file:///}" | gawk '{
+    while (match($0, /%[0-9a-fA-F][0-9a-fA-F]/))
+      $0 = substr($0, 1, RSTART-1) \
+           sprintf("%c", strtonum("0x" substr($0, RSTART+1, 2))) \
+           substr($0, RSTART+3)
+    print
+  }'
+}
+
+# Editor per-workspace state for folders that are gone. Only prunes an entry it
+# can positively prove is dead: no workspace.json, no "folder" key, a non-ASCII
+# escape, or a drive that is not mounted (G: while Drive is offline) all mean
+# "leave it alone".
+_clean_ws_orphans() {
+  local ws=$1 d j uri path n=0
+  [ -d "$ws" ] || return 0
+  for d in "$ws"/*/; do
+    j="$d/workspace.json"
+    [ -f "$j" ] || continue
+    uri=$(sed -n 's/.*"folder"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$j")
+    case $uri in
+      "" | *%[89aAbBcCdDeEfF][0-9a-fA-F]*) continue ;;
+    esac
+    path=$(_clean_uri_path "$uri")
+    [ -n "$path" ] || continue          # decode failed: unknowable, keep
+    [ -d "${path%%/*}/" ] || continue   # drive not mounted: unknowable, keep
+    [ -d "$path" ] && continue
+    n=$((n + 1))
+    [ -n "$CLEAN_DRY" ] || _clean_rm "$d"
+  done
+  [ "$n" -gt 0 ] && printf '  %-26s %s\n' "vscodium workspaces" "$n orphaned"
+  return 0
+}
+
 clean() {
   local CLEAN_DRY=1 before after
   local la="$HOME/AppData/Local" ra="$HOME/AppData/Roaming"
@@ -261,14 +311,36 @@ clean() {
   _clean_tool "npm"                 "$la/npm-cache"          npm cache clean --force
   _clean_tool "uv"                  "$la/uv/cache"           uv cache clean
   _clean_tool "pip"                 "$la/pip/Cache"          python -m pip cache purge
+  _clean_gone "yarn (uninstalled)"  "$la/Yarn"               yarn
+
+  _hr "Build caches"
+  _clean_dir  "electron"            "$la/electron/Cache"
+  _clean_dir  "electron-builder"    "$la/electron-builder"
+  _clean_dir  "node-gyp headers"    "$la/node-gyp/Cache"
+
+  _hr "Language toolchain caches"
+  _clean_dir  "pub packages"        "$la/Pub/Cache/hosted"
+  _clean_dir  "pub hashes"          "$la/Pub/Cache/hosted-hashes"
+  _clean_dir  "pub temp"            "$la/Pub/Cache/_temp"
+  _clean_dir  "dart analysis"       "$la/.dartServer"
+  _clean_dir  "jxbrowser chromium"  "$la/JxBrowser-x64"
+  _clean_dir  "jxbrowser chromium"  "$la/JxBrowser"
 
   _hr "Browser / MCP caches"
   _clean_dir  "chrome cache"        "$la/Google/Chrome/User Data/Default/Cache"
   _clean_dir  "chrome code cache"   "$la/Google/Chrome/User Data/Default/Code Cache"
   _clean_dir  "chrome gpu cache"    "$la/Google/Chrome/User Data/Default/GPUCache"
+  _clean_dir  "chrome shader cache" "$la/Google/Chrome/User Data/GrShaderCache"
   _clean_dir  "edge cache"          "$la/Microsoft/Edge/User Data/Default/Cache"
   _clean_dir  "edge code cache"     "$la/Microsoft/Edge/User Data/Default/Code Cache"
+  _clean_dir  "edge gpu cache"      "$la/Microsoft/Edge/User Data/Default/GPUCache"
+  # Browser binaries: versioned, re-downloadable, and slow to fetch again.
+  # Wiped on purpose -- the next playwright/puppeteer run re-installs them.
+  _clean_dir  "playwright browsers" "$la/ms-playwright"
+  _clean_dir  "playwright-go"       "$la/ms-playwright-go"
   _clean_dir  "playwright-mcp"      "$la/ms-playwright-mcp"
+  _clean_dir  "puppeteer browsers"  "$HOME/.cache/puppeteer"
+  _clean_dir  "chrome-devtools-mcp" "$la/chrome-devtools-mcp"
   _clean_dir  "chrome-devtools-mcp" "$HOME/.cache/chrome-devtools-mcp"
 
   _hr "Editor caches"
@@ -276,6 +348,16 @@ clean() {
   _clean_dir  "vscode cacheddata"   "$ra/Code/CachedData"
   _clean_dir  "vscode vsix"         "$ra/Code/CachedExtensionVSIXs"
   _clean_dir  "vscode logs"         "$ra/Code/logs"
+  _clean_dir  "vscodium cache"      "$ra/VSCodium/Cache"
+  _clean_dir  "vscodium cacheddata" "$ra/VSCodium/CachedData"
+  _clean_dir  "vscodium profiles"   "$ra/VSCodium/CachedProfilesData"
+  _clean_dir  "vscodium vsix"       "$ra/VSCodium/CachedExtensionVSIXs"
+  _clean_dir  "vscodium gpu cache"  "$ra/VSCodium/GPUCache"
+  _clean_dir  "vscodium dawn cache" "$ra/VSCodium/DawnGraphiteCache"
+  _clean_dir  "vscodium dawn cache" "$ra/VSCodium/DawnWebGPUCache"
+  _clean_dir  "vscodium code cache" "$ra/VSCodium/Code Cache"
+  _clean_dir  "vscodium logs"       "$ra/VSCodium/logs"
+  _clean_ws_orphans                 "$ra/VSCodium/User/workspaceStorage"
 
   _hr "Temp + dumps"
   _clean_dir  "crash dumps"         "$la/CrashDumps"
