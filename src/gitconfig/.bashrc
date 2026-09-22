@@ -227,6 +227,15 @@ export PATH
 #   WinGet\Packages           real installs live here (uv included), not a cache
 #   JetBrains */caches,index  wiping these forces a full project re-index
 #   node_modules              build input, not cache -- drop it per project
+#   ~/.claude/projects/*/memory  per-project persistent memory
+#   ~/.claude/projects/*/CLAUDE.md, settings*, scheduled_tasks.json
+#   ~/.claude/plugins         installed Claude Code plugins
+#   ~/.claude/skills          custom skills
+#   ~/.claude/hooks           user hook scripts
+#   ~/.claude/ide             IDE integration config
+#   ~/.claude/security        security settings
+#   ~/.claude/CLAUDE.md       user instructions
+#   $la/Citrix/Receiver,SelfService,AuthManager  corp VPN config, not cache
 
 CLEAN_TEMP_DAYS="${CLEAN_TEMP_DAYS:-3}"   # temp files newer than this are kept
 
@@ -301,6 +310,25 @@ _clean_ws_orphans() {
   return 0
 }
 
+# Purge Claude Code per-project session transcripts (.jsonl) and working dirs
+# (UUID-named) while keeping memory/, CLAUDE.md, settings, and scheduled tasks.
+_clean_cc_projects() {
+  local pdir="$HOME/.claude/projects" n=0 f d
+  [ -d "$pdir" ] || return 0
+  for f in "$pdir"/*/*.jsonl; do
+    [ -f "$f" ] || continue
+    n=$((n + 1))
+    [ -n "$CLEAN_DRY" ] || _clean_rm "$f"
+  done
+  for d in "$pdir"/*/[0-9a-f][0-9a-f]??????-????-????-????-????????????/; do
+    [ -d "$d" ] || continue
+    n=$((n + 1))
+    [ -n "$CLEAN_DRY" ] || _clean_rm "$d"
+  done
+  [ "$n" -gt 0 ] && printf '  %-26s %s\n' "cc project sessions" "$n items"
+  return 0
+}
+
 clean() {
   local CLEAN_DRY=1 before after
   local la="$HOME/AppData/Local" ra="$HOME/AppData/Roaming"
@@ -342,6 +370,35 @@ clean() {
   _clean_dir  "puppeteer browsers"  "$HOME/.cache/puppeteer"
   _clean_dir  "chrome-devtools-mcp" "$la/chrome-devtools-mcp"
   _clean_dir  "chrome-devtools-mcp" "$HOME/.cache/chrome-devtools-mcp"
+  _clean_dir  "codebase-memory-mcp" "$HOME/.cache/codebase-memory-mcp"
+
+  _hr "Communication app caches"
+  _clean_dir  "zoom data"           "$ra/Zoom/data"
+  _clean_dir  "zoom logs"           "$ra/Zoom/logs"
+  _clean_dir  "zoom reports"        "$ra/Zoom/reports"
+  _clean_dir  "zoom download"       "$ra/Zoom/ZoomDownload"
+  _clean_dir  "webex cache"         "$la/WebEx"
+  _clean_dir  "cisco spark"         "$la/CiscoSpark"
+
+  _hr "Desktop app caches"
+  _clean_dir  "postman cache"       "$ra/Postman/Cache"
+  _clean_dir  "postman code cache"  "$ra/Postman/Code Cache"
+  _clean_dir  "postman crashpad"    "$ra/Postman/Crashpad"
+  _clean_dir  "box cache"           "$la/Box/Box/cache"
+  _clean_dir  "box logs"            "$la/Box/Box/logs"
+  _clean_dir  "box office logs"     "$la/Box/BoxForOfficeLogs"
+  _clean_dir  "devtoys webview2"    "$la/DevToys.WebView2"
+  _clean_dir  "adobe acrocef"       "$la/Adobe/AcroCef"
+  _clean_dir  "citrix telemetry"    "$la/Citrix/CitrixTelemetry"
+  _clean_dir  "citrix analytics"    "$la/Citrix/Analytics"
+
+  _hr "AI / dev tool caches"
+  _clean_dir  "opencode cache"      "$HOME/.cache/opencode"
+  _clean_dir  "rtk tee"             "$la/rtk/tee"
+
+  _hr "System caches"
+  _clean_dir  "d3d shader cache"    "$la/D3DSCache"
+  _clean_dir  "squirrel temp"       "$la/SquirrelTemp"
 
   _hr "Editor caches"
   _clean_dir  "vscode cache"        "$ra/Code/Cache"
@@ -358,6 +415,24 @@ clean() {
   _clean_dir  "vscodium code cache" "$ra/VSCodium/Code Cache"
   _clean_dir  "vscodium logs"       "$ra/VSCodium/logs"
   _clean_ws_orphans                 "$ra/VSCodium/User/workspaceStorage"
+
+  _hr "Claude Code caches"
+  local cc="$HOME/.claude"
+  _clean_dir  "cc cache"              "$cc/cache"
+  _clean_dir  "cc debug"              "$cc/debug"
+  _clean_dir  "cc paste-cache"        "$cc/paste-cache"
+  _clean_dir  "cc plans"              "$cc/plans"
+  _clean_dir  "cc sessions"           "$cc/sessions"
+  _clean_dir  "cc telemetry"          "$cc/telemetry"
+  _clean_dir  "cc backups"            "$cc/backups"
+  _clean_dir  "cc file-history"       "$cc/file-history"
+  _clean_dir  "cc shell-snapshots"    "$cc/shell-snapshots"
+  _clean_dir  "cc session-env"        "$cc/session-env"
+  _clean_dir  "cc tasks"              "$cc/tasks"
+  _clean_dir  "cc daemon"             "$cc/daemon"
+  _clean_dir  "cc jobs"               "$cc/jobs"
+  _clean_dir  "cc cli-nodejs"         "$la/claude-cli-nodejs"
+  _clean_cc_projects
 
   _hr "Temp + dumps"
   _clean_dir  "crash dumps"         "$la/CrashDumps"
