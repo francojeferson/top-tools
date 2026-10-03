@@ -76,6 +76,7 @@ alias ll.='ls -la'
 alias lls='ls -la --sort=size'
 alias llt='ls -la --sort=time'
 alias rm='rm -iv'
+alias claude='claude --effort max'
 alias init='work && clean -f && verup && ver'
 alias work='cd "$REPOS"'
 
@@ -104,6 +105,7 @@ ver() {
   echo "Python: $(_ver python --version)"
   echo "pip: $(_ver python -m pip --version | sed 's/pip \([0-9.]*\).*/\1/')"
   echo "UV: $(_ver uvx --version)"
+  echo "Rust: $(_ver rustc --version)"
   echo "ClaudeCode: $(_ver claude -v)"
   echo "OpenCode: $(_ver opencode -v)"
 }
@@ -148,6 +150,8 @@ verup() {
   _upd npm npm install -g npm@latest
   _upd pip python -m pip install --upgrade pip
   _upd_uv
+  _upd rust rustup update
+  _upd rtk winget upgrade --id rtk-ai.rtk -e --accept-source-agreements
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
   _upd opencode npm install -g --allow-scripts=opencode-ai opencode-ai@latest
   _hr "End of updates!"
