@@ -107,6 +107,7 @@ ver() {
   echo "UV: $(_ver uvx --version)"
   echo "Rust: $(_ver rustc --version)"
   echo "ClaudeCode: $(_ver claude -v)"
+  echo "Codex: $(_ver codex --version)"
   echo "OpenCode: $(_ver opencode -v)"
 }
 
@@ -153,6 +154,7 @@ verup() {
   _upd rust rustup update
   _upd rtk winget upgrade --id rtk-ai.rtk -e --accept-source-agreements
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
+  _upd codex npm install -g @openai/codex@latest
   _upd opencode npm install -g --allow-scripts=opencode-ai opencode-ai@latest
   _hr "End of updates!"
 }
@@ -200,7 +202,7 @@ shopt -s histappend histverify
 # of padding PATH with dead entries. Official Windows installers own node and
 # python; nvm and pyenv are not used.
 
-# opencode / claude (npm global) -> %APPDATA%\npm
+# claude / codex / opencode (npm global) -> %APPDATA%\npm
 [ -d "$HOME/AppData/Roaming/npm" ] && PATH="$PATH:$HOME/AppData/Roaming/npm"
 
 # Node installer -> C:\Program Files\nodejs (node, npm, npx)
@@ -214,6 +216,8 @@ export PATH
 # --- Cache / temp cleanup ---------------------------------------------------
 # clean      dry run: list what would be removed, delete nothing (default)
 # clean -f   actually delete, then report the space reclaimed
+#             also deletes local Claude/OpenCode/Codex session history; close
+#             those tools first so their stores and runtime files are idle
 #
 # User-scoped on purpose: nothing here needs admin, so C:\Windows\Temp is left
 # alone (this account is denied it anyway).
@@ -239,6 +243,12 @@ export PATH
 #   ~/.claude/ide             IDE integration config
 #   ~/.claude/security        security settings
 #   ~/.claude/CLAUDE.md       user instructions
+#   ~/.config/opencode        settings, plugins, and plugin dependencies
+#   ~/.local/share/opencode/auth.json,opencode.db*  credentials and data store
+#   ~/.codex/auth.json,config.toml,AGENTS.md,hooks.json  auth and configuration
+#   ~/.codex/skills,plugins    installed Codex extensions
+#   ~/.codex/*memories*.sqlite,goals_*.sqlite        persistent memory and goals
+#   ~/.codex/thread-writer-locks,app-server-*         live process coordination
 #   $la/Citrix/Receiver,SelfService,AuthManager  corp VPN config, not cache
 
 CLEAN_TEMP_DAYS="${CLEAN_TEMP_DAYS:-3}"   # temp files newer than this are kept
@@ -254,6 +264,13 @@ _clean_rm() { command rm -rf -- "$@" 2>/dev/null; }
 # _clean_dir <label> <path> - drop a cache directory if it is there.
 _clean_dir() {
   [ -d "$2" ] || return 0
+  printf '  %-26s %s\n' "$1" "${2#$HOME/}"
+  [ -n "$CLEAN_DRY" ] || _clean_rm "$2"
+}
+
+# _clean_file <label> <path> - drop a single cache file if it is there.
+_clean_file() {
+  [ -f "$2" ] || return 0
   printf '  %-26s %s\n' "$1" "${2#$HOME/}"
   [ -n "$CLEAN_DRY" ] || _clean_rm "$2"
 }
@@ -333,6 +350,61 @@ _clean_cc_projects() {
   return 0
 }
 
+# Remove OpenCode sessions through its CLI so the SQLite store, child sessions,
+# messages, and parts are deleted together instead of leaving dangling rows.
+_clean_opencode_sessions() {
+  local ids id n=0 failed=0
+  command -v opencode >/dev/null 2>&1 || return 0
+  ids=$(opencode --pure session list --format json 2>/dev/null |
+    sed -n 's/^[[:space:]]*"id":[[:space:]]*"\([^"]*\)".*/\1/p') || return 0
+  for id in $ids; do
+    if [ -n "$CLEAN_DRY" ]; then
+      n=$((n + 1))
+    elif opencode --pure session delete "$id" >/dev/null 2>&1; then
+      n=$((n + 1))
+    else
+      failed=$((failed + 1))
+    fi
+  done
+  if [ "$n" -gt 0 ] || [ "$failed" -gt 0 ]; then
+    if [ -n "$CLEAN_DRY" ]; then
+      printf '  %-26s %s\n' "opencode sessions" "$n sessions"
+    else
+      printf '  %-26s %s\n' "opencode sessions" "$n deleted, $failed kept"
+    fi
+  fi
+  return 0
+}
+ 
+# Codex keeps rollout files and SQLite thread metadata in sync. Extract each
+# rollout UUID, then let `codex delete` remove it consistently. A live session
+# may refuse deletion; count it as kept and continue cleaning other entries.
+_clean_codex_sessions() {
+  local cdir="$1/sessions" f id n=0 failed=0
+  command -v codex >/dev/null 2>&1 || return 0
+  [ -d "$cdir" ] || return 0
+  while IFS= read -r -d '' f; do
+    id=$(printf '%s\n' "${f##*/}" | sed -n \
+      's/.*-\([0-9a-fA-F]\{8\}-[0-9a-fA-F]\{4\}-[0-9a-fA-F]\{4\}-[0-9a-fA-F]\{4\}-[0-9a-fA-F]\{12\}\)\.jsonl$/\1/p')
+    [ -n "$id" ] || continue
+    if [ -n "$CLEAN_DRY" ]; then
+      n=$((n + 1))
+    elif codex delete --force "$id" >/dev/null 2>&1; then
+      n=$((n + 1))
+    else
+      failed=$((failed + 1))
+    fi
+  done < <(find "$cdir" -type f -name 'rollout-*.jsonl' -print0 2>/dev/null)
+  if [ "$n" -gt 0 ] || [ "$failed" -gt 0 ]; then
+    if [ -n "$CLEAN_DRY" ]; then
+      printf '  %-26s %s\n' "codex sessions" "$n sessions"
+    else
+      printf '  %-26s %s\n' "codex sessions" "$n deleted, $failed kept"
+    fi
+  fi
+  return 0
+}
+
 clean() {
   local CLEAN_DRY=1 before after
   local la="$HOME/AppData/Local" ra="$HOME/AppData/Roaming"
@@ -397,7 +469,7 @@ clean() {
   _clean_dir  "citrix analytics"    "$la/Citrix/Analytics"
 
   _hr "AI / dev tool caches"
-  _clean_dir  "opencode cache"      "$HOME/.cache/opencode"
+
   _clean_dir  "rtk tee"             "$la/rtk/tee"
 
   _hr "System caches"
@@ -438,6 +510,28 @@ clean() {
   _clean_dir  "cc cli-nodejs"         "$la/claude-cli-nodejs"
   _clean_cc_projects
 
+  _hr "OpenCode caches"
+  local oc_cache="${XDG_CACHE_HOME:-$HOME/.cache}/opencode"
+  local oc_data="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
+  local oc_state="${XDG_STATE_HOME:-$HOME/.local/state}/opencode"
+  _clean_opencode_sessions
+  _clean_dir  "opencode cache"         "$oc_cache"
+  _clean_dir  "opencode logs"          "$oc_data/log"
+  _clean_dir  "opencode snapshots"     "$oc_data/snapshot"
+  _clean_dir  "opencode locks"         "$oc_state/locks"
+  _clean_dir  "opencode temp"          "$la/Temp/opencode"
+ 
+  _hr "Codex caches"
+  local codex_home="${CODEX_HOME:-$HOME/.codex}"
+  _clean_codex_sessions "$codex_home"
+  _clean_dir  "codex cache"            "$codex_home/cache"
+  _clean_file "codex models cache"     "$codex_home/models_cache.json"
+  _clean_dir  "codex staging"          "$codex_home/.tmp"
+  _clean_dir  "codex temp"             "$codex_home/tmp"
+  _clean_dir  "codex logs"             "$codex_home/log"
+  _clean_dir  "codex shell snapshots"  "$codex_home/shell_snapshots"
+  _clean_dir  "codex tui refs"         "$codex_home/tui-thread-reference-capabilities"
+ 
   _hr "Temp + dumps"
   _clean_dir  "crash dumps"         "$la/CrashDumps"
   if [ -d "$la/Temp" ]; then
