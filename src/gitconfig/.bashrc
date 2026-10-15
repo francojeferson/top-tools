@@ -250,6 +250,10 @@ export PATH
 #   ~/.codex/*memories*.sqlite,goals_*.sqlite        persistent memory and goals
 #   ~/.codex/thread-writer-locks,app-server-*         live process coordination
 #   $la/Citrix/Receiver,SelfService,AuthManager  corp VPN config, not cache
+#   $ra/orca/speech-models    model weights, ~640M to re-download
+#   $ra/orca/ai-vault,profiles,*.key,*keypair*  credentials and profile state
+#   $ra/orca/agent-session-*,terminal-history   session journal and history
+#   $la/Orca/daemon-host      the installed runtime, not a cache
 
 CLEAN_TEMP_DAYS="${CLEAN_TEMP_DAYS:-3}"   # temp files newer than this are kept
 
@@ -471,6 +475,17 @@ clean() {
   _hr "AI / dev tool caches"
 
   _clean_dir  "rtk tee"             "$la/rtk/tee"
+  # Orca is Electron: same cache layout as the VSCodium entries above.
+  _clean_dir  "orca cache"          "$ra/orca/Cache"
+  _clean_dir  "orca code cache"     "$ra/orca/Code Cache"
+  _clean_dir  "orca gpu cache"      "$ra/orca/GPUCache"
+  _clean_dir  "orca dawn cache"     "$ra/orca/DawnGraphiteCache"
+  _clean_dir  "orca dawn cache"     "$ra/orca/DawnWebGPUCache"
+  _clean_dir  "orca blob storage"   "$ra/orca/blob_storage"
+  _clean_dir  "orca crashpad"       "$ra/orca/Crashpad"
+  _clean_dir  "orca logs"           "$ra/orca/logs"
+  # Downloaded installer (~210M), re-fetched by the updater when needed.
+  _clean_file "orca installer"      "$la/orca-updater/installer.exe"
 
   _hr "System caches"
   _clean_dir  "d3d shader cache"    "$la/D3DSCache"
