@@ -15,25 +15,27 @@ REPOS="${REPOS:-$HOME/repos}"                # target of the `work` alias
 TOOLS="${TOOLS:-$HOME/Documents/Tools}"      # unpacked tools (gradle, node, ...)
 
 # ssh-agent: reuse one persistent agent across shells (no leak, one passphrase prompt)
-env=~/.ssh/agent.env
+# Name of its own, and left set: both helpers below stay usable by hand after
+# startup. A bare `env` that got unset at the end of this block did not.
+AGENT_ENV=~/.ssh/agent.env
+
 agent_load_env() {
-  test -f "$env" && . "$env" >/dev/null
+  test -f "$AGENT_ENV" && . "$AGENT_ENV" >/dev/null
 }
 
 agent_start() {
-  (umask 077; ssh-agent >"$env")
-  . "$env" >/dev/null
+  (umask 077; ssh-agent >"$AGENT_ENV")
+  . "$AGENT_ENV" >/dev/null
 }
 
 agent_load_env
 agent_state=$(ssh-add -l >/dev/null 2>&1; echo $?) # 0=key loaded 1=no key 2=no agent
 if [ ! "$SSH_AUTH_SOCK" ] || [ "$agent_state" = 2 ]; then
   agent_start
-  [ -f "$SSH_KEY" ] && ssh-add "$SSH_KEY"
-elif [ "$agent_state" = 1 ]; then
-  [ -f "$SSH_KEY" ] && ssh-add "$SSH_KEY"
 fi
-unset env
+# 0 means the key is already loaded; 1 and 2 both need it added.
+[ "$agent_state" != 0 ] && [ -f "$SSH_KEY" ] && ssh-add "$SSH_KEY"
+unset agent_state
 
 # Git aliases
 alias gs='git status -sb'
@@ -61,9 +63,6 @@ alias gm='git merge'
 alias gf='git fetch'
 
 # Bash aliases
-# NOTE: cdd, not `.` -- `.` is the `source` builtin, and aliasing it breaks
-# `. ~/.bashrc` and `. venv/Scripts/activate`.
-alias cdd='cd .'
 alias ..='cd ..'
 alias ...='cd ../../'
 alias ....='cd ../../../'
@@ -77,7 +76,10 @@ alias lls='ls -la --sort=size'
 alias llt='ls -la --sort=time'
 alias rm='rm -iv'
 alias claude='claude --effort max'
-alias init='work && clean -f && verup && ver'
+# `clean` only, not `clean -f`: a forced clean deletes live Claude/OpenCode/
+# Codex session state, and `init` is often run from inside one of them. You get
+# the list, then run `clean -f` yourself once those tools are closed.
+alias init='work && clean && verup && ver'
 alias work='cd "$REPOS"'
 
 # Print a tool's version, or "not installed" if it is absent.
@@ -98,17 +100,50 @@ _ver_gradle() {
 # Report the version of every tool in the toolchain.
 ver() {
   echo "Git: $(_ver git -v)"
+  echo "GitHubCLI: $(_ver gh --version)"
   echo "Node: $(_ver node -v)"
   echo "npm: $(_ver npm -v)"
   echo "Java: $(_ver java -version)"
   echo "Gradle: $(_ver_gradle)"
   echo "Python: $(_ver python --version)"
   echo "pip: $(_ver python -m pip --version | sed 's/pip \([0-9.]*\).*/\1/')"
-  echo "UV: $(_ver uvx --version)"
+  echo "UV: $(_ver uv --version)"
   echo "Rust: $(_ver rustc --version)"
+  echo "RTK: $(_ver rtk --version)"
   echo "ClaudeCode: $(_ver claude -v)"
   echo "Codex: $(_ver codex --version)"
   echo "OpenCode: $(_ver opencode -v)"
+  _ver_updates
+}
+
+# Git, VSCodium and Node come from their own installers and Python from
+# PyManager, so `verup` never touches them and they go stale unnoticed.
+# Both checks hit the network (~3s), so this runs from `ver` on demand, never
+# at shell startup. One winget call covers all three winget-owned tools.
+_ver_updates() {
+  local out pair label id cur latest
+  command -v winget >/dev/null 2>&1 &&
+    out=$(winget upgrade --accept-source-agreements 2>/dev/null)
+  for pair in 'Git:Git.Git' \
+              'VSCodium:VSCodium.VSCodium' \
+              'Node:OpenJS.NodeJS.LTS' \
+              'PyManager:Python.PythonInstallManager'; do
+    label=${pair%%:*}; id=${pair#*:}
+    case $out in
+      *"$id"*) echo "! $label update available (winget upgrade --id $id -e)" ;;
+    esac
+  done
+
+  # PyManager owns the interpreter, so winget only ever sees the manager, not
+  # the Python it installed. Ask PyManager for the newest build of the minor
+  # already installed; a major bump is a deliberate migration, not an update.
+  cur=$(python --version 2>/dev/null | cut -d' ' -f2)
+  [ -n "$cur" ] || return 0
+  latest=$(py list --online -f json "${cur%.*}" 2>/dev/null |
+             grep -o '"sort-version": "[0-9][0-9.]*"' | head -n 1 | cut -d'"' -f4)
+  [ -n "$latest" ] && [ "$latest" != "$cur" ] &&
+    echo "! Python $cur -> $latest (py install ${cur%.*} --upgrade)"
+  return 0
 }
 
 _hr() {
@@ -117,15 +152,33 @@ _hr() {
   echo "--------------------"
 }
 
-# _upd <label> <command...> - run the update, or skip if the tool is absent.
-# Tests the first word of <command...>, so `_upd pip python -m pip ...` checks python.
+# _upd <tool> <command...> - run the update, or skip if the tool is absent.
+# Tests <tool> itself, not the first word of <command...>: the updater is often
+# a different program (winget, npm), and testing that would install the tool on
+# a box that never had it instead of skipping it.
 _upd() {
-  local label=$1; shift
-  _hr "Updating $label..."
-  if command -v "$1" >/dev/null 2>&1; then
-    "$@"
+  local tool=$1; shift
+  _hr "Updating $tool..."
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "$tool not installed - skipped"
+  elif ! command -v "$1" >/dev/null 2>&1; then
+    echo "$1 not installed - cannot update $tool"
   else
-    echo "$1 not installed - skipped"
+    "$@"
+  fi
+}
+
+# pip ships as a python module, and the `pip` shim is not always on PATH even
+# where `python -m pip` works fine. Test the module, so a missing shim does not
+# silently stop pip from ever being upgraded.
+_upd_pip() {
+  _hr "Updating pip..."
+  if ! command -v python >/dev/null 2>&1; then
+    echo "python not installed - cannot update pip"
+  elif ! python -m pip --version >/dev/null 2>&1; then
+    echo "pip not installed - skipped"
+  else
+    python -m pip install --upgrade pip
   fi
 }
 
@@ -149,9 +202,10 @@ _upd_uv() {
 # Update every tool in the toolchain. Skips whatever is not installed.
 verup() {
   _upd npm npm install -g npm@latest
-  _upd pip python -m pip install --upgrade pip
+  _upd_pip
   _upd_uv
-  _upd rust rustup update
+  _upd rustup rustup update
+  _upd gh winget upgrade --id GitHub.cli -e --accept-source-agreements
   _upd rtk winget upgrade --id rtk-ai.rtk -e --accept-source-agreements
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
   _upd codex npm install -g @openai/codex@latest
@@ -210,6 +264,15 @@ shopt -s histappend histverify
 
 # Python installer (PyManager 3.14+) -> %LOCALAPPDATA%\Python\bin (python, pip shims)
 [ -d "$HOME/AppData/Local/Python/bin" ] && PATH="$HOME/AppData/Local/Python/bin:$PATH"
+
+# Drop duplicate and empty entries, keeping the first of each, so `. ~/.bashrc`
+# stays idempotent. First-wins preserves the priority the prepends just set,
+# and clears any repeats inherited from the Windows PATH too.
+# Assigned only if it produced something: a missing awk/paste would otherwise
+# blank PATH and leave the shell with no commands at all.
+_path_dedup=$(printf '%s' "$PATH" | tr ':' '\n' | awk 'NF && !seen[$0]++' | paste -sd:)
+[ -n "$_path_dedup" ] && PATH=$_path_dedup
+unset _path_dedup
 
 export PATH
 
@@ -315,7 +378,7 @@ _clean_uri_path() {
 # escape, or a drive that is not mounted (G: while Drive is offline) all mean
 # "leave it alone".
 _clean_ws_orphans() {
-  local ws=$1 d j uri path n=0
+  local ws=$1 label=${2:-workspaces} d j uri path n=0
   [ -d "$ws" ] || return 0
   for d in "$ws"/*/; do
     j="$d/workspace.json"
@@ -331,14 +394,14 @@ _clean_ws_orphans() {
     n=$((n + 1))
     [ -n "$CLEAN_DRY" ] || _clean_rm "$d"
   done
-  [ "$n" -gt 0 ] && printf '  %-26s %s\n' "vscodium workspaces" "$n orphaned"
+  [ "$n" -gt 0 ] && printf '  %-26s %s\n' "$label" "$n orphaned"
   return 0
 }
 
 # Purge Claude Code per-project session transcripts (.jsonl) and working dirs
 # (UUID-named) while keeping memory/, CLAUDE.md, settings, and scheduled tasks.
 _clean_cc_projects() {
-  local pdir="$HOME/.claude/projects" n=0 f d
+  local pdir="${1:-$HOME/.claude/projects}" n=0 f d
   [ -d "$pdir" ] || return 0
   for f in "$pdir"/*/*.jsonl; do
     [ -f "$f" ] || continue
@@ -379,7 +442,7 @@ _clean_opencode_sessions() {
   fi
   return 0
 }
- 
+
 # Codex keeps rollout files and SQLite thread metadata in sync. Extract each
 # rollout UUID, then let `codex delete` remove it consistently. A live session
 # may refuse deletion; count it as kept and continue cleaning other entries.
@@ -409,8 +472,43 @@ _clean_codex_sessions() {
   return 0
 }
 
+# clean_selfcheck - the two helpers above decide what to delete by parsing
+# text, so prove they prune only what is really dead. Run it by hand after
+# touching them; nothing calls it automatically. Works on a fake tree, never
+# on your real caches.
+clean_selfcheck() {
+  local t win rc=0 CLEAN_DRY="" d uuid=8bae70a1-b346-4bbb-bdc0-db1228974670
+  t=$(mktemp -d "$HOME/.clean-selfcheck.XXXXXX") || return 1
+  win="${t#/}"; win="${win%%/*}:/${t#/*/}"   # /c/Users/x -> c:/Users/x, as VSCodium writes it
+
+  mkdir -p "$t/live" "$t/ws/keep-live" "$t/ws/prune-dead" "$t/ws/keep-nojson" \
+           "$t/ws/keep-badescape" "$t/ws/keep-nodrive"
+  printf '{"folder":"file:///%s/live"}\n' "${win//:/%3A}"  > "$t/ws/keep-live/workspace.json"
+  printf '{"folder":"file:///%s/gone"}\n' "${win//:/%3A}"  > "$t/ws/prune-dead/workspace.json"
+  printf '{"folder":"file:///c%%3A/caf%%E9"}\n'            > "$t/ws/keep-badescape/workspace.json"
+  printf '{"folder":"file:///q%%3A/nope"}\n'               > "$t/ws/keep-nodrive/workspace.json"
+  _clean_ws_orphans "$t/ws" >/dev/null
+  for d in keep-live keep-nojson keep-badescape keep-nodrive; do
+    [ -d "$t/ws/$d" ] || { echo "FAIL ws_orphans: deleted $d"; rc=1; }
+  done
+  [ -d "$t/ws/prune-dead" ] && { echo "FAIL ws_orphans: kept a dead workspace"; rc=1; }
+
+  mkdir -p "$t/projects/p/$uuid" "$t/projects/p/memory"
+  : > "$t/projects/p/session.jsonl"; : > "$t/projects/p/memory/keep.md"
+  : > "$t/projects/p/CLAUDE.md"
+  _clean_cc_projects "$t/projects" >/dev/null
+  [ -f "$t/projects/p/session.jsonl" ] && { echo "FAIL cc_projects: kept a transcript"; rc=1; }
+  [ -d "$t/projects/p/$uuid" ]         && { echo "FAIL cc_projects: kept a session dir"; rc=1; }
+  [ -f "$t/projects/p/memory/keep.md" ] || { echo "FAIL cc_projects: deleted memory"; rc=1; }
+  [ -f "$t/projects/p/CLAUDE.md" ]      || { echo "FAIL cc_projects: deleted CLAUDE.md"; rc=1; }
+
+  command rm -rf -- "$t"
+  [ "$rc" = 0 ] && echo "clean_selfcheck: all checks passed"
+  return "$rc"
+}
+
 clean() {
-  local CLEAN_DRY=1 before after
+  local CLEAN_DRY=1 before after freed
   local la="$HOME/AppData/Local" ra="$HOME/AppData/Roaming"
   [ "$1" = "-f" ] && CLEAN_DRY=""
   before=$(_clean_free)
@@ -473,7 +571,6 @@ clean() {
   _clean_dir  "citrix analytics"    "$la/Citrix/Analytics"
 
   _hr "AI / dev tool caches"
-
   _clean_dir  "rtk tee"             "$la/rtk/tee"
   # Orca is Electron: same cache layout as the VSCodium entries above.
   _clean_dir  "orca cache"          "$ra/orca/Cache"
@@ -496,6 +593,7 @@ clean() {
   _clean_dir  "vscode cacheddata"   "$ra/Code/CachedData"
   _clean_dir  "vscode vsix"         "$ra/Code/CachedExtensionVSIXs"
   _clean_dir  "vscode logs"         "$ra/Code/logs"
+  _clean_ws_orphans                 "$ra/Code/User/workspaceStorage" "vscode workspaces"
   _clean_dir  "vscodium cache"      "$ra/VSCodium/Cache"
   _clean_dir  "vscodium cacheddata" "$ra/VSCodium/CachedData"
   _clean_dir  "vscodium profiles"   "$ra/VSCodium/CachedProfilesData"
@@ -505,7 +603,7 @@ clean() {
   _clean_dir  "vscodium dawn cache" "$ra/VSCodium/DawnWebGPUCache"
   _clean_dir  "vscodium code cache" "$ra/VSCodium/Code Cache"
   _clean_dir  "vscodium logs"       "$ra/VSCodium/logs"
-  _clean_ws_orphans                 "$ra/VSCodium/User/workspaceStorage"
+  _clean_ws_orphans                 "$ra/VSCodium/User/workspaceStorage" "vscodium workspaces"
 
   _hr "Claude Code caches"
   local cc="$HOME/.claude"
@@ -535,7 +633,7 @@ clean() {
   _clean_dir  "opencode snapshots"     "$oc_data/snapshot"
   _clean_dir  "opencode locks"         "$oc_state/locks"
   _clean_dir  "opencode temp"          "$la/Temp/opencode"
- 
+
   _hr "Codex caches"
   local codex_home="${CODEX_HOME:-$HOME/.codex}"
   _clean_codex_sessions "$codex_home"
@@ -546,7 +644,7 @@ clean() {
   _clean_dir  "codex logs"             "$codex_home/log"
   _clean_dir  "codex shell snapshots"  "$codex_home/shell_snapshots"
   _clean_dir  "codex tui refs"         "$codex_home/tui-thread-reference-capabilities"
- 
+
   _hr "Temp + dumps"
   _clean_dir  "crash dumps"         "$la/CrashDumps"
   if [ -d "$la/Temp" ]; then
@@ -563,6 +661,10 @@ clean() {
     _hr "Nothing deleted. Run 'clean -f' to do it."
   else
     after=$(_clean_free)
-    _hr "Reclaimed $(( after - before )) MB -- $(( after / 1024 )) GB free on C:"
+    # Free space is the whole of C:, so anything else writing during the run
+    # can outweigh what we deleted. Report 0 rather than a negative "reclaimed".
+    freed=$(( after - before ))
+    [ "$freed" -lt 0 ] && freed=0
+    _hr "Reclaimed $freed MB -- $(( after / 1024 )) GB free on C:"
   fi
 }
