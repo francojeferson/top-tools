@@ -76,17 +76,19 @@ alias lls='ls -la --sort=size'
 alias llt='ls -la --sort=time'
 alias rm='rm -iv'
 alias claude='claude --effort max'
-# `clean` only, not `clean -f`: a forced clean deletes live Claude/OpenCode/
-# Codex session state, and `init` is often run from inside one of them. You get
-# the list, then run `clean -f` yourself once those tools are closed.
-alias init='work && clean && verup && ver'
+# `clean -f` deletes live Claude/OpenCode/Codex session state, and `init` is
+# often run from inside one of them. Close those tools before running it; use
+# bare `clean` when you only want the list.
+alias init='work && clean -f && verup && ver'
 alias work='cd "$REPOS"'
 
 # Print a tool's version, or "not installed" if it is absent.
 _ver() {
   local cmd=$1; shift
   command -v "$cmd" >/dev/null 2>&1 || { echo "not installed"; return; }
-  "$cmd" "$@" 2>&1 | head -n 1
+  # First non-blank line, not first line: 7-Zip opens its banner with an empty
+  # one, which would report the tool as installed but versionless.
+  "$cmd" "$@" 2>&1 | grep -m1 .
 }
 
 # Gradle lives in a directory; it is not a command on PATH.
@@ -101,6 +103,8 @@ _ver_gradle() {
 ver() {
   echo "Git: $(_ver git -v)"
   echo "GitHubCLI: $(_ver gh --version)"
+  echo "VSCodium: $(_ver codium --version)"
+  echo "7-Zip: $(_ver 7z | sed 's/^7-Zip \([0-9.]*\).*/\1/')"
   echo "Node: $(_ver node -v)"
   echo "npm: $(_ver npm -v)"
   echo "Java: $(_ver java -version)"
@@ -116,8 +120,10 @@ ver() {
   _ver_updates
 }
 
-# Git, VSCodium and Node come from their own installers and Python from
-# PyManager, so `verup` never touches them and they go stale unnoticed.
+# Git cannot be upgraded from inside Git Bash (that would replace the running
+# bash.exe), so `verup` only reports it, exactly as here. Node, Python and
+# VSCodium `verup` does update; they stay listed here so `ver` on its own
+# still tells you what is pending.
 # Both checks hit the network (~3s), so this runs from `ver` on demand, never
 # at shell startup. One winget call covers all three winget-owned tools.
 _ver_updates() {
@@ -126,6 +132,7 @@ _ver_updates() {
     out=$(winget upgrade --accept-source-agreements 2>/dev/null)
   for pair in 'Git:Git.Git' \
               'VSCodium:VSCodium.VSCodium' \
+              '7-Zip:7zip.7zip' \
               'Node:OpenJS.NodeJS.LTS' \
               'PyManager:Python.PythonInstallManager'; do
     label=${pair%%:*}; id=${pair#*:}
@@ -142,7 +149,7 @@ _ver_updates() {
   latest=$(py list --online -f json "${cur%.*}" 2>/dev/null |
              grep -o '"sort-version": "[0-9][0-9.]*"' | head -n 1 | cut -d'"' -f4)
   [ -n "$latest" ] && [ "$latest" != "$cur" ] &&
-    echo "! Python $cur -> $latest (py install ${cur%.*} --upgrade)"
+    echo "! Python $cur -> $latest (py install ${cur%.*} -u)"
   return 0
 }
 
@@ -199,14 +206,126 @@ _upd_uv() {
   fi
 }
 
+# _winget_up <id> - upgrade a winget package without ever asking the user.
+# A machine-scope package (Program Files) needs admin, and unelevated winget
+# answers that with a UAC dialog, which stalls `verup` forever on a box where
+# the account cannot elevate at all. So prove the package is user-scope, or
+# that we are elevated, before calling winget; otherwise just print the command
+# to run by hand. --disable-interactivity is the backstop for everything else:
+# winget fails instead of prompting. winget exits non-zero for "nothing to do",
+# so the result is read from the text, not the status.
+_winget_up() {
+  local id=$1 proc=$2 out rc
+  command -v winget >/dev/null 2>&1 || { echo "winget not installed - skipped"; return; }
+  # `winget list` grows an "Available" column only when a newer version exists,
+  # so its presence is the whole test. Asked first, because every bail-out
+  # below prints a command to run by hand -- and nagging about a tool that is
+  # already current is how a warning stops being read.
+  case $(winget list --id "$id" -e --accept-source-agreements 2>/dev/null) in
+    *Available*) ;;
+    *) echo "up to date"; return ;;
+  esac
+  # A silent upgrade replaces files in use: it would close a running editor, or
+  # the shell this runs in, and take any AI session with it. Pass the app's
+  # process name and it is reported instead of killed.
+  if [ -n "$proc" ] && tasklist //NH //FI "IMAGENAME eq $proc" 2>/dev/null | grep -qi "$proc"; then
+    echo "! update available, but $proc is running - close it, or run:"
+    echo "    winget upgrade --id $id -e"
+    return
+  fi
+  if ! winget list --id "$id" -e --scope user --accept-source-agreements >/dev/null 2>&1 &&
+     ! net session >/dev/null 2>&1; then
+    echo "! update available, but it is machine-scope and this account cannot"
+    echo "  elevate - run as admin: winget upgrade --id $id -e"
+    return
+  fi
+  out=$(winget upgrade --id "$id" -e --silent --disable-interactivity \
+          --accept-source-agreements --accept-package-agreements 2>&1)
+  rc=$?
+  printf '%s\n' "$out"
+  case $out in
+    *"No available upgrade"* | *"No installed package"*) return ;;
+  esac
+  [ "$rc" = 0 ] || echo "! not updated - run as admin: winget upgrade --id $id -e"
+}
+
+# PyManager owns the interpreter, so winget never sees it. Upgrade the minor
+# already installed; a major bump is a deliberate migration, not an update.
+# -y so a confirmation prompt cannot stall the run.
+_upd_python() {
+  local cur=""
+  _hr "Updating Python..."
+  command -v python >/dev/null 2>&1 && cur=$(python --version 2>/dev/null | cut -d' ' -f2)
+  if ! command -v py >/dev/null 2>&1; then
+    echo "py (PyManager) not installed - skipped"
+  elif [ -z "$cur" ]; then
+    echo "python not installed - skipped"
+  else
+    py install -u -y "${cur%.*}"
+  fi
+}
+
+# Pull a JDK package Id out of `winget list`. Matches a dotted token only, so
+# it can only ever hit the Id column -- names in the Name column have spaces.
+_java_winget_id() {
+  grep -oiE '[A-Za-z0-9]+\.[A-Za-z0-9.]*(Temurin|OpenJDK|Zulu|Corretto|GraalVM|Liberica|JDK)[A-Za-z0-9.]*' |
+    head -n 1
+}
+
+# Java has no single vendor, so resolve whichever JDK winget installed instead
+# of pinning an id that would go wrong on the next machine.
+# shortcut: only a winget-installed JDK is upgraded; an unpacked JDK under
+# $TOOLS is reported and left alone. Add a branch here if you adopt one.
+_upd_java() {
+  local id
+  _hr "Updating Java..."
+  if ! command -v java >/dev/null 2>&1; then
+    echo "java not installed - skipped"
+    return
+  fi
+  id=$(winget list --accept-source-agreements 2>/dev/null | _java_winget_id)
+  if [ -z "$id" ]; then
+    echo "no winget JDK package found - update it the way you installed it"
+  else
+    _winget_up "$id"
+  fi
+}
+
+# verup_selfcheck - _java_winget_id picks an id out of free text, so prove it
+# finds real JDK ids and ignores everything else. Run by hand after editing it.
+verup_selfcheck() {
+  local got rc=0 line
+  for line in 'Microsoft Build of OpenJDK (21)  Microsoft.OpenJDK.21  21.0.5  winget:Microsoft.OpenJDK.21' \
+              'Eclipse Temurin JDK 21  EclipseAdoptium.Temurin.21.JDK  21.0.5  winget:EclipseAdoptium.Temurin.21.JDK' \
+              'Azul Zulu 21  Azul.Zulu.21.JDK  21.0.5  winget:Azul.Zulu.21.JDK' \
+              'Node.js  OpenJS.NodeJS.LTS  24.22.1  winget:' \
+              'GitHub CLI  GitHub.cli  2.103.2  winget:'; do
+    got=$(printf '%s\n' "${line%:*}" | _java_winget_id)
+    [ "$got" = "${line##*:}" ] ||
+      { echo "FAIL java id: got '$got', want '${line##*:}'"; rc=1; }
+  done
+  [ "$rc" = 0 ] && echo "verup_selfcheck: all checks passed"
+  return "$rc"
+}
+
 # Update every tool in the toolchain. Skips whatever is not installed.
+# Node before npm and Python before pip: the runtime update ships its own copy
+# of the package manager, so updating the manager first would be thrown away.
 verup() {
+  _upd node _winget_up OpenJS.NodeJS.LTS
   _upd npm npm install -g npm@latest
+  _upd_python
   _upd_pip
   _upd_uv
+  _upd_java
   _upd rustup rustup update
-  _upd gh winget upgrade --id GitHub.cli -e --accept-source-agreements
-  _upd rtk winget upgrade --id rtk-ai.rtk -e --accept-source-agreements
+  # bash.exe is the shell running this line, so the guard can never clear for
+  # Git: it degrades to a notice plus the command, which is all Git can get.
+  _upd git _winget_up Git.Git bash.exe
+  _upd gh _winget_up GitHub.cli
+  _upd rtk _winget_up rtk-ai.rtk
+  _upd codium _winget_up VSCodium.VSCodium codium.exe
+  _upd 7z _winget_up 7zip.7zip 7zFM.exe
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
   _upd codex npm install -g @openai/codex@latest
   _upd opencode npm install -g --allow-scripts=opencode-ai opencode-ai@latest
@@ -264,6 +383,11 @@ shopt -s histappend histverify
 
 # Python installer (PyManager 3.14+) -> %LOCALAPPDATA%\Python\bin (python, pip shims)
 [ -d "$HOME/AppData/Local/Python/bin" ] && PATH="$HOME/AppData/Local/Python/bin:$PATH"
+
+# 7-Zip installer -> C:\Program Files\7-Zip (7z). Its installer never puts this
+# on PATH, so `ver`/`verup` would call 7-Zip "not installed". Appended, not
+# prepended: nothing here should outrank a 7z the toolchain already provides.
+[ -d "/c/Program Files/7-Zip" ] && PATH="$PATH:/c/Program Files/7-Zip"
 
 # Drop duplicate and empty entries, keeping the first of each, so `. ~/.bashrc`
 # stays idempotent. First-wins preserves the priority the prepends just set,
