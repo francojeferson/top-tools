@@ -121,20 +121,22 @@ ver() {
 }
 
 # Git cannot be upgraded from inside Git Bash (that would replace the running
-# bash.exe), so `verup` only reports it, exactly as here. Node, Python and
-# VSCodium `verup` does update; they stay listed here so `ver` on its own
-# still tells you what is pending.
+# bash.exe), so `verup` only reports it, exactly as here. The rest `verup`
+# updates, or for a machine-wide package prints the command to run; they stay
+# listed here so `ver` on its own still tells you what is pending.
 # Both checks hit the network (~3s), so this runs from `ver` on demand, never
-# at shell startup. One winget call covers all three winget-owned tools.
+# at shell startup. One winget call covers every winget-owned tool.
 _ver_updates() {
   local out pair label id cur latest
   command -v winget >/dev/null 2>&1 &&
     out=$(winget upgrade --accept-source-agreements 2>/dev/null)
   for pair in 'Git:Git.Git' \
+              'GitHubCLI:GitHub.cli' \
               'VSCodium:VSCodium.VSCodium' \
               '7-Zip:7zip.7zip' \
               'Node:OpenJS.NodeJS.LTS' \
-              'PyManager:Python.PythonInstallManager'; do
+              'PyManager:Python.PythonInstallManager' \
+              'RTK:rtk-ai.rtk'; do
     label=${pair%%:*}; id=${pair#*:}
     case $out in
       *"$id"*) echo "! $label update available (winget upgrade --id $id -e)" ;;
@@ -191,19 +193,18 @@ _upd_pip() {
 
 # uv's updater depends on install source: WinGet-managed copies refuse
 # `uv self update`, pip-managed copies must be upgraded with pip, and
-# standalone installs have no WinGet package to upgrade.
+# standalone installs update themselves. Decide by the uv that is actually on
+# PATH, not by which installer knows of one: a stray pip copy off PATH once
+# took every upgrade while the uv in use sat versions behind.
 _upd_uv() {
+  local uv
   _hr "Updating uv..."
-  if ! command -v uv >/dev/null 2>&1; then
-    echo "uv not installed - skipped"
-  elif command -v winget >/dev/null 2>&1 &&
-       winget list --id astral-sh.uv -e --accept-source-agreements >/dev/null 2>&1; then
-    winget upgrade --id astral-sh.uv -e --accept-source-agreements
-  elif python -m pip show uv >/dev/null 2>&1; then
-    python -m pip install --upgrade uv
-  else
-    uv self update
-  fi
+  uv=$(command -v uv 2>/dev/null) || { echo "uv not installed - skipped"; return; }
+  case $uv in
+    */WinGet/*)  winget upgrade --id astral-sh.uv -e --accept-source-agreements ;;
+    */Scripts/*) python -m pip install --upgrade uv ;;
+    *)           uv self update ;;
+  esac
 }
 
 # _winget_up <id> - upgrade a winget package without ever asking the user.
@@ -235,8 +236,8 @@ _winget_up() {
   fi
   if ! winget list --id "$id" -e --scope user --accept-source-agreements >/dev/null 2>&1 &&
      ! net session >/dev/null 2>&1; then
-    echo "! update available, but it is machine-scope and this account cannot"
-    echo "  elevate - run as admin: winget upgrade --id $id -e"
+    echo "! update available, but it is machine-wide and needs admin - run:"
+    echo "    winget upgrade --id $id -e   (then approve the UAC prompt)"
     return
   fi
   out=$(winget upgrade --id "$id" -e --silent --disable-interactivity \
@@ -246,7 +247,9 @@ _winget_up() {
   case $out in
     *"No available upgrade"* | *"No installed package"*) return ;;
   esac
-  [ "$rc" = 0 ] || echo "! not updated - run as admin: winget upgrade --id $id -e"
+  # Only user-scope or already-elevated runs get here, so admin is never the
+  # fix: the reason is in winget's output above (a file in use, the network).
+  [ "$rc" = 0 ] || echo "! not updated - see winget's output above, then retry: winget upgrade --id $id -e"
 }
 
 # PyManager owns the interpreter, so winget never sees it. Upgrade the minor
@@ -311,9 +314,11 @@ verup_selfcheck() {
 # Update every tool in the toolchain. Skips whatever is not installed.
 # Node before npm and Python before pip: the runtime update ships its own copy
 # of the package manager, so updating the manager first would be thrown away.
+# PyManager goes before Python itself: it is what installs the interpreter.
 verup() {
   _upd node _winget_up OpenJS.NodeJS.LTS
   _upd npm npm install -g npm@latest
+  _upd py _winget_up Python.PythonInstallManager
   _upd_python
   _upd_pip
   _upd_uv
@@ -322,9 +327,9 @@ verup() {
   # bash.exe is the shell running this line, so the guard can never clear for
   # Git: it degrades to a notice plus the command, which is all Git can get.
   _upd git _winget_up Git.Git bash.exe
-  _upd gh _winget_up GitHub.cli
+  _upd gh _winget_up GitHub.cli gh.exe
   _upd rtk _winget_up rtk-ai.rtk
-  _upd codium _winget_up VSCodium.VSCodium codium.exe
+  _upd codium _winget_up VSCodium.VSCodium VSCodium.exe
   _upd 7z _winget_up 7zip.7zip 7zFM.exe
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
   _upd codex npm install -g @openai/codex@latest
@@ -419,7 +424,7 @@ export PATH
 #   $ra/VSCodium/User         settings, snippets, globalStorage, local file History
 #   $ra/VSCodium/WebStorage   extension state, not a cache
 #   $la/Pub/Cache/bin         `dart pub global activate` installs
-#   WinGet\Packages           real installs live here (uv included), not a cache
+#   WinGet\Packages           real installs live here (rtk, gh), not a cache
 #   JetBrains */caches,index  wiping these forces a full project re-index
 #   node_modules              build input, not cache -- drop it per project
 #   ~/.claude/projects/*/memory  per-project persistent memory
