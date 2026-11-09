@@ -116,6 +116,7 @@
   "git.autofetch": true,
   "git.enableSmartCommit": true,
   "git.ignoreRebaseWarning": true,
+  // gitlens.* is read by GitLess (maaeettdd.gitless), a GitLens 11.7 fork that kept the prefix
   "gitlens.hovers.currentLine.over": "line",
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": false,
@@ -199,10 +200,6 @@
   "terminal.integrated.confirmOnKill": "never",
   "terminal.integrated.initialHint": false,
   "terminal.integrated.tabs.enabled": false,
-  "terminal.integrated.commandsToSkipShell": [
-    "kilo-code.new.agentManagerOpen",
-    "kilo-code.new.agentManager.showTerminal"
-  ],
 
   // JavaScript/TypeScript settings
   "js/ts.updateImportsOnFileMove.enabled": "always",
@@ -212,21 +209,6 @@
   "update.enableWindowsBackgroundUpdates": false,
   "update.mode": "none",
   "update.showReleaseNotes": false,
-
-  // Kilo-code settings
-  // debug/allowedCommands/deniedCommands: legacy keys, absent from Kilo Code 7.8 (kept for older installs)
-  "kilo-code.debug": false,
-  "kilo-code.allowedCommands": [
-    "git log",
-    "git diff",
-    "git show"
-  ],
-  "kilo-code.deniedCommands": [],
-  "kilo-code.new.autocomplete.enableAutoTrigger": true,
-  "kilo-code.new.autocomplete.enableSmartInlineTaskKeybinding": true,
-  "kilo-code.new.autocomplete.enableChatAutocomplete": true,
-  "kilo-code.new.browserAutomation.enabled": true,
-  "kilo-code.new.browserAutomation.headless": true,
 
   // Telemetry and AI settings
   "telemetry.telemetryLevel": "off",
