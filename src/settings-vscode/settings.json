@@ -60,16 +60,17 @@
   "workbench.editor.openPositioning": "last",
 
   // Python development settings
-  "python.formatting.provider": "black",
-  "python.formatting.blackPath": "black",
-  "python.formatting.blackArgs": ["--line-length", "120"],
-  // "python.sortImports.path": "isort", // Commented out due to Unknown Configuration Setting error
+  "[python]": {
+    "editor.tabSize": 4, // PEP 8; global tabSize 2 + detectIndentation off would mix indents
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "black-formatter.args": ["--line-length", "120"],
+  "isort.args": ["--profile", "black", "--line-length", "120"],
+  "debugpy.debugJustMyCode": false,
+  // python.analysis.* is read by Pylance, which only exists on VS Code (VSCodium ignores these)
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.diagnosticMode": "workspace",
   "python.analysis.autoImportCompletions": true,
-  "python.linting.enabled": true,
-  "python.linting.pylintEnabled": true,
-  "python.debugging.debugJustMyCode": false,
 
   // Explorer settings
   "explorer.compactFolders": false,
@@ -86,12 +87,7 @@
 
   // Files settings
   "files.associations": {
-    "*.js": "javascriptreact",
-    "*.jsx": "javascriptreact",
-    "*.ts": "typescript",
-    "*.tsx": "typescriptreact",
-    "*.vue": "vue",
-    "*.py": "python"
+    "*.js": "javascriptreact"
   },
   "files.trimTrailingWhitespace": false,
   "files.insertFinalNewline": true,
@@ -110,15 +106,7 @@
     "**/package-lock*": true,
     "**/yarn*": true,
     "**/pnpm-lock*": true,
-    "**/vite*": true,
-    "**/tsconfig*": true,
-    "**/prettier*": true,
-    "**/.eslint*": true,
-    "**/.tailwind.config*": true,
-    "**/.postcss.config*": true,
-    "**/.env*": true,
     "**/.next*": true,
-    "**/.git": true,
     "**/dist": true,
     "**/build": true
   },
@@ -226,6 +214,7 @@
   "update.showReleaseNotes": false,
 
   // Kilo-code settings
+  // debug/allowedCommands/deniedCommands: legacy keys, absent from Kilo Code 7.8 (kept for older installs)
   "kilo-code.debug": false,
   "kilo-code.allowedCommands": [
     "git log",
@@ -241,7 +230,7 @@
 
   // Telemetry and AI settings
   "telemetry.telemetryLevel": "off",
-  "chat.agentsControl.enabled": false,
+  "chat.agentsControl.enabled": "hidden",
   "diffEditor.ignoreTrimWhitespace": true,
   "chat.titleBar.openInAgentsWindow.enabled": false,
   "workbench.browser.showInTitleBar": false,
