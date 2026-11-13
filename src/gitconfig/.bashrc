@@ -78,7 +78,8 @@ alias rm='rm -iv'
 alias claude='claude --effort max'
 # `clean -f` deletes live Claude/OpenCode/Codex session state, and `init` is
 # often run from inside one of them. Close those tools before running it; use
-# bare `clean` when you only want the list.
+# bare `clean` when you only want the list. `clean -f` itself refuses while a
+# Claude Code session is running (OpenCode and Codex are not checked).
 alias init='work && clean -f && verup && ver'
 alias work='cd "$REPOS"'
 
@@ -410,6 +411,7 @@ export PATH
 # clean -f   actually delete, then report the space reclaimed
 #             also deletes local Claude/OpenCode/Codex session history; close
 #             those tools first so their stores and runtime files are idle
+#             (refuses to run while a Claude Code session is open)
 #
 # User-scoped on purpose: nothing here needs admin, so C:\Windows\Temp is left
 # alone (this account is denied it anyway).
@@ -546,6 +548,43 @@ _clean_cc_projects() {
   return 0
 }
 
+# Claude Code writes ~/.claude/sessions/<pid>.json (a Windows pid) for each
+# running session. Print "<pid> (<image>)" for every one whose process is still
+# alive, so `clean -f` can refuse instead of deleting that session's own
+# transcript. A crash leaves a file naming a dead pid, which is not listed; the
+# image check keeps a pid that Windows has since reused from counting.
+_clean_live_claude() {
+  local f pid img
+  for f in "${1:-$HOME/.claude/sessions}"/*.json; do
+    [ -f "$f" ] || continue
+    pid=$(sed -n 's/.*"pid"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$f")
+    [ -n "$pid" ] || continue
+    img=$(tasklist //FI "PID eq $pid" //NH //FO CSV 2>/dev/null | sed -n 's/^"\(claude\|node\)\.exe".*/\1.exe/p')
+    [ -n "$img" ] && printf '%s (%s)\n' "$pid" "$img"
+  done
+  return 0
+}
+
+# _clean_temp <dir> - files in <dir> older than CLEAN_TEMP_DAYS. `find -mtime +3`
+# means 4 or more full days, hence the +1 in the label. This is the biggest
+# delete in clean, so a dry run names the files (first 20).
+_clean_temp() {
+  local list n
+  [ -d "$1" ] || return 0
+  list=$(find "$1" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type f -printf '%P\n' 2>/dev/null)
+  n=$(printf '%s' "$list" | grep -c .)
+  printf '  %-26s %s\n' "temp" "$n files at least $((CLEAN_TEMP_DAYS + 1))d old"
+  if [ -n "$CLEAN_DRY" ]; then
+    printf '%s\n' "$list" | head -n 20 | sed -n 's/^./      &/p'
+    [ "$n" -gt 20 ] && printf '      ... and %s more\n' "$((n - 20))"
+    return 0
+  fi
+  # Files first, then the old directories that are empty; anything a running
+  # process still holds open simply fails and is left in place.
+  find "$1" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type f -delete 2>/dev/null
+  find "$1" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type d -empty -delete 2>/dev/null
+}
+
 # Remove OpenCode sessions through its CLI so the SQLite store, child sessions,
 # messages, and parts are deleted together instead of leaving dangling rows.
 _clean_opencode_sessions() {
@@ -601,12 +640,12 @@ _clean_codex_sessions() {
   return 0
 }
 
-# clean_selfcheck - the two helpers above decide what to delete by parsing
-# text, so prove they prune only what is really dead. Run it by hand after
+# clean_selfcheck - the helpers above decide what to delete by parsing text
+# and file ages, so prove they prune only what is really dead. Run it by hand after
 # touching them; nothing calls it automatically. Works on a fake tree, never
 # on your real caches.
 clean_selfcheck() {
-  local t win rc=0 CLEAN_DRY="" d uuid=8bae70a1-b346-4bbb-bdc0-db1228974670
+  local t win rc=0 CLEAN_DRY="" CLEAN_TEMP_DAYS=3 live d uuid=8bae70a1-b346-4bbb-bdc0-db1228974670
   t=$(mktemp -d "$HOME/.clean-selfcheck.XXXXXX") || return 1
   win="${t#/}"; win="${win%%/*}:/${t#/*/}"   # /c/Users/x -> c:/Users/x, as VSCodium writes it
 
@@ -631,15 +670,42 @@ clean_selfcheck() {
   [ -f "$t/projects/p/memory/keep.md" ] || { echo "FAIL cc_projects: deleted memory"; rc=1; }
   [ -f "$t/projects/p/CLAUDE.md" ]      || { echo "FAIL cc_projects: deleted CLAUDE.md"; rc=1; }
 
+  mkdir -p "$t/tmp/mixed"
+  : > "$t/tmp/old.txt"; : > "$t/tmp/fresh.txt"; : > "$t/tmp/edge.txt"
+  : > "$t/tmp/mixed/old.txt"; : > "$t/tmp/mixed/fresh.txt"
+  touch -d '6 days ago' "$t/tmp/old.txt" "$t/tmp/mixed/old.txt"
+  touch -d '1 day ago' "$t/tmp/fresh.txt" "$t/tmp/mixed/fresh.txt"
+  touch -d '3 days 12 hours ago' "$t/tmp/edge.txt"   # under 4 full days: find keeps it
+  CLEAN_DRY=1
+  _clean_temp "$t/tmp" | grep -q 'old.txt' || { echo "FAIL temp: dry run did not name an old file"; rc=1; }
+  [ -f "$t/tmp/old.txt" ] || { echo "FAIL temp: dry run deleted a file"; rc=1; }
+  CLEAN_DRY=""
+  _clean_temp "$t/tmp" >/dev/null
+  { [ -f "$t/tmp/old.txt" ] || [ -f "$t/tmp/mixed/old.txt" ]; } && { echo "FAIL temp: kept an old file"; rc=1; }
+  { [ -f "$t/tmp/fresh.txt" ] && [ -f "$t/tmp/mixed/fresh.txt" ] && [ -f "$t/tmp/edge.txt" ]; } ||
+    { echo "FAIL temp: deleted a file that is not old enough"; rc=1; }
+
+  mkdir -p "$t/sessions"
+  printf '{"pid":111,"sessionId":"a"}\n' > "$t/sessions/111.json"
+  printf '{"pid":222,"sessionId":"b"}\n' > "$t/sessions/222.json"
+  tasklist() { [ "$2" = "PID eq 111" ] && printf '"claude.exe","111","Console","1","1 K"\r\n'; }   # only pid 111 is alive
+  live=$(_clean_live_claude "$t/sessions")
+  unset -f tasklist
+  [ "$live" = "111 (claude.exe)" ] || { echo "FAIL live_claude: wanted '111 (claude.exe)', got '$live'"; rc=1; }
+
   command rm -rf -- "$t"
   [ "$rc" = 0 ] && echo "clean_selfcheck: all checks passed"
   return "$rc"
 }
 
 clean() {
-  local CLEAN_DRY=1 before after freed
+  local CLEAN_DRY=1 before after freed live
   local la="$HOME/AppData/Local" ra="$HOME/AppData/Roaming"
-  [ "$1" = "-f" ] && CLEAN_DRY=""
+  if [ "$1" = "-f" ]; then
+    live=$(_clean_live_claude)
+    [ -z "$live" ] || { echo "clean -f: Claude Code is still running: ${live//$'\n'/, }. Close it first; bare 'clean' only lists." >&2; return 1; }
+    CLEAN_DRY=""
+  fi
   before=$(_clean_free)
 
   _hr "${CLEAN_DRY:+DRY RUN - }Package manager caches"
@@ -776,15 +842,7 @@ clean() {
 
   _hr "Temp + dumps"
   _clean_dir  "crash dumps"         "$la/CrashDumps"
-  if [ -d "$la/Temp" ]; then
-    printf '  %-26s %s\n' "temp" "files older than ${CLEAN_TEMP_DAYS}d"
-    # Files first, then the directories they emptied; anything a running
-    # process still holds open simply fails and is left in place.
-    [ -n "$CLEAN_DRY" ] || {
-      find "$la/Temp" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type f -delete 2>/dev/null
-      find "$la/Temp" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type d -empty -delete 2>/dev/null
-    }
-  fi
+  _clean_temp "$la/Temp"
 
   if [ -n "$CLEAN_DRY" ]; then
     _hr "Nothing deleted. Run 'clean -f' to do it."
