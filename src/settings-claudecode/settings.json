@@ -24,7 +24,7 @@
     "code-simplifier@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": false,
     "typescript-lsp@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
@@ -38,6 +38,9 @@
   },
   "spinnerTipsEnabled": false,
   "effortLevel": "xhigh",
+  "env": {
+    "CLAUDE_CODE_EFFORT_LEVEL": "max"
+  },
   "theme": "dark",
   "prefersReducedMotion": true,
   "includeCoAuthoredBy": false,
@@ -54,18 +57,16 @@
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_network_requests",
       "WebSearch",
       "Bash(rtk grep *)",
-      "Bash(rtk find *)",
       "Bash(rtk ls *)",
       "Bash(rtk read *)",
-      "Bash(rtk curl *)",
       "Bash(rtk git status *)",
       "Bash(rtk git diff *)",
       "Bash(rtk git log *)",
       "Bash(rtk git show *)",
-      "Bash(rtk git branch *)",
+      "Bash(rtk git branch)",
       "Bash(rtk git fetch *)",
-      "Bash(rtk git stash *)",
-      "Bash(rtk git remote *)"
+      "Bash(rtk git stash list)",
+      "Bash(rtk git remote -v)"
     ]
   }
 }
