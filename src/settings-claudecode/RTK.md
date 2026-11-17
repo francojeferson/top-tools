@@ -1,6 +1,6 @@
 # RTK - Rust Token Killer
 
-**Usage**: Token-optimized CLI proxy (60-90% savings on dev operations)
+**Usage**: Token-optimized CLI proxy (cuts up to 90% of bash output)
 
 ## Meta Commands (always use rtk directly)
 
@@ -17,6 +17,15 @@ rtk proxy <cmd>       # Execute raw command without filtering (for debugging)
 rtk --version         # Should show: rtk X.Y.Z
 rtk gain              # Should work (not "command not found")
 which rtk             # Verify correct binary
+```
+
+## Install Source
+
+RTK is expected to be WinGet-managed on this machine, not a standalone install.
+
+```bash
+winget install --id rtk-ai.rtk -e --accept-source-agreements
+winget upgrade --id rtk-ai.rtk -e --accept-source-agreements
 ```
 
 ⚠️ **Name collision**: If `rtk gain` fails, you may have reachingforthejack/rtk (Rust Type Kit) installed instead.
