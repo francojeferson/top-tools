@@ -78,8 +78,8 @@ alias rm='rm -iv'
 alias claude='claude --effort max'
 # `clean -f` deletes live Claude/OpenCode/Codex session state, and `init` is
 # often run from inside one of them. Close those tools before running it; use
-# bare `clean` when you only want the list. `clean -f` itself refuses while a
-# Claude Code session is running (OpenCode and Codex are not checked).
+# bare `clean` when you only want the list. `clean -f` refuses while Claude
+# Code, Codex, or OpenCode is running.
 alias init='work && clean -f && verup && ver'
 alias work='cd "$REPOS"'
 
@@ -409,9 +409,9 @@ export PATH
 # --- Cache / temp cleanup ---------------------------------------------------
 # clean      dry run: list what would be removed, delete nothing (default)
 # clean -f   actually delete, then report the space reclaimed
-#             also deletes local Claude/OpenCode/Codex session history; close
-#             those tools first so their stores and runtime files are idle
-#             (refuses to run while a Claude Code session is open)
+#             also deletes local session history and persistent AI memories;
+#             close those tools first so their stores and runtime files are idle
+#             (refuses while Claude Code, Codex, or OpenCode is running)
 #
 # User-scoped on purpose: nothing here needs admin, so C:\Windows\Temp is left
 # alone (this account is denied it anyway).
@@ -429,19 +429,19 @@ export PATH
 #   WinGet\Packages           real installs live here (rtk, gh), not a cache
 #   JetBrains */caches,index  wiping these forces a full project re-index
 #   node_modules              build input, not cache -- drop it per project
-#   ~/.claude/projects/*/memory  per-project persistent memory
 #   ~/.claude/projects/*/CLAUDE.md, settings*, scheduled_tasks.json
-#   ~/.claude/plugins         installed Claude Code plugins
+#   ~/.claude/plugins         installed Claude Code plugins (except orphaned caches)
 #   ~/.claude/skills          custom skills
 #   ~/.claude/hooks           user hook scripts
 #   ~/.claude/ide             IDE integration config
 #   ~/.claude/security        security settings
 #   ~/.claude/CLAUDE.md       user instructions
 #   ~/.config/opencode        settings, plugins, and plugin dependencies
+#   ${XDG_CACHE_HOME:-~/.cache}/opencode  installed plugins and runtime files
 #   ~/.local/share/opencode/auth.json,opencode.db*  credentials and data store
 #   ~/.codex/auth.json,config.toml,AGENTS.md,hooks.json  auth and configuration
 #   ~/.codex/skills,plugins    installed Codex extensions
-#   ~/.codex/*memories*.sqlite,goals_*.sqlite        persistent memory and goals
+#   ~/.codex/goals_*.sqlite   persistent goals
 #   ~/.codex/thread-writer-locks,app-server-*         live process coordination
 #   $la/Citrix/Receiver,SelfService,AuthManager  corp VPN config, not cache
 #   $ra/orca/speech-models    model weights, ~640M to re-download
@@ -530,7 +530,7 @@ _clean_ws_orphans() {
 }
 
 # Purge Claude Code per-project session transcripts (.jsonl) and working dirs
-# (UUID-named) while keeping memory/, CLAUDE.md, settings, and scheduled tasks.
+# (UUID-named); auto memory is handled separately from project instructions.
 _clean_cc_projects() {
   local pdir="${1:-$HOME/.claude/projects}" n=0 f d
   [ -d "$pdir" ] || return 0
@@ -545,6 +545,76 @@ _clean_cc_projects() {
     [ -n "$CLEAN_DRY" ] || _clean_rm "$d"
   done
   [ "$n" -gt 0 ] && printf '  %-26s %s\n' "cc project sessions" "$n items"
+  return 0
+}
+
+# shortcut: only default user-level Claude memories are covered; add custom or project-scoped stores if used.
+_clean_cc_memories() {
+  local cc="${1:-$HOME/.claude}" root dir resolved links
+  [ -d "$cc" ] && [ ! -L "$cc" ] || return 0
+  root=$(realpath -e -- "$cc" 2>/dev/null) || return 1
+  for dir in "$cc"/projects/*/memory "$cc"/agent-memory; do
+    [ -d "$dir" ] || continue
+    resolved=$(realpath -e -- "$dir" 2>/dev/null) || continue
+    if [ -L "$dir" ] || [ "$resolved" != "$root/${dir#"$cc"/}" ]; then
+      printf '  %-26s %s\n' "cc memories" "skipped linked path: $dir"
+      continue
+    fi
+    links=$(find "$resolved" -type l -print -quit 2>/dev/null) || continue
+    if [ -n "$links" ]; then
+      printf '  %-26s %s\n' "cc memories" "skipped linked contents: $dir"
+      continue
+    fi
+    printf '  %-26s %s\n' "cc memories" "${dir#$HOME/}"
+    if [ -z "$CLEAN_DRY" ] && ! command rm -rf -- "$resolved"; then
+      printf '  %-26s %s\n' "cc memories" "failed to remove: $dir" >&2
+    fi
+  done
+}
+
+# Remove orphaned plugin versions only after checking the installed registry.
+_clean_cc_plugin_cache() {
+  local plugins="${1:-$HOME/.claude/plugins}" cache installed paths="" d path canonical links n=0
+  [ -d "$plugins/cache" ] || return 0
+  if [ -L "$plugins" ] || [ -L "$plugins/cache" ]; then
+    echo "  cc orphaned plugins        skipped: cache path is a link"
+    return 0
+  fi
+  if ! command -v jq >/dev/null 2>&1 || ! command -v cygpath >/dev/null 2>&1 ||
+     ! cache=$(realpath -e -- "$plugins/cache" 2>/dev/null); then
+    echo "  cc orphaned plugins        skipped: jq, cygpath or cache unavailable"
+    return 0
+  fi
+  installed=$(jq -er '
+    if (.plugins | type) == "object" and all(.plugins[]; type == "array") then
+      [.plugins[][] | .installPath |
+        if type == "string" and length > 0 and (contains("\n") | not) then .
+        else error("invalid installPath") end] | join("\n")
+    else error("invalid plugins") end' "$plugins/installed_plugins.json" 2>/dev/null) || {
+    echo "  cc orphaned plugins        skipped: cannot read installed plugins"
+    return 0
+  }
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    canonical=$(cygpath -u "$path" 2>/dev/null) && canonical=$(realpath -e -- "$canonical" 2>/dev/null) &&
+      canonical=$(cygpath -m "$canonical" 2>/dev/null) || {
+      echo "  cc orphaned plugins        skipped: cannot resolve installed plugin"
+      return 0
+    }
+    paths+="$canonical"$'\n'
+  done <<< "$installed"
+  for d in "$plugins"/cache/*/*/*; do
+    [ -d "$d" ] && [ ! -L "$d" ] && [ -f "$d/.orphaned_at" ] && [ ! -L "$d/.orphaned_at" ] || continue
+    canonical=$(realpath -e -- "$d" 2>/dev/null) || continue
+    [ "$canonical" = "$cache/${d#"$plugins"/cache/}" ] || continue
+    path=$(cygpath -m "$canonical" 2>/dev/null) || continue
+    printf '%s' "$paths" | grep -Fxiq -- "$path" && continue
+    links=$(find "$canonical" -type l -print -quit 2>/dev/null) || continue
+    [ -z "$links" ] || continue
+    n=$((n + 1))
+    [ -n "$CLEAN_DRY" ] || _clean_rm "$canonical"
+  done
+  [ "$n" -gt 0 ] && printf '  %-26s %s\n' "cc orphaned plugins" "$n versions"
   return 0
 }
 
@@ -565,7 +635,14 @@ _clean_live_claude() {
   return 0
 }
 
-# _clean_temp <dir> - files in <dir> older than CLEAN_TEMP_DAYS. `find -mtime +3`
+# shortcut: only native Codex/OpenCode process names are detected; extend if their launchers change.
+_clean_live_other_ai() {
+  local processes
+  processes=$(tasklist //NH //FO CSV 2>/dev/null) || return 1
+  printf '%s\n' "$processes" | sed -nE 's/^"((codex|opencode)(-[^"]*)?\.exe)","([0-9]+)".*/\1 (\4)/Ip'
+}
+
+# _clean_temp <dir> [label] - files in <dir> older than CLEAN_TEMP_DAYS. `find -mtime +3`
 # means 4 or more full days, hence the +1 in the label. This is the biggest
 # delete in clean, so a dry run names the files (first 20).
 _clean_temp() {
@@ -573,7 +650,7 @@ _clean_temp() {
   [ -d "$1" ] || return 0
   list=$(find "$1" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type f -printf '%P\n' 2>/dev/null)
   n=$(printf '%s' "$list" | grep -c .)
-  printf '  %-26s %s\n' "temp" "$n files at least $((CLEAN_TEMP_DAYS + 1))d old"
+  printf '  %-26s %s\n' "${2:-temp}" "$n files at least $((CLEAN_TEMP_DAYS + 1))d old"
   if [ -n "$CLEAN_DRY" ]; then
     printf '%s\n' "$list" | head -n 20 | sed -n 's/^./      &/p'
     [ "$n" -gt 20 ] && printf '      ... and %s more\n' "$((n - 20))"
@@ -585,14 +662,22 @@ _clean_temp() {
   find "$1" -mindepth 1 -mtime "+$CLEAN_TEMP_DAYS" -type d -empty -delete 2>/dev/null
 }
 
-# Remove OpenCode sessions through its CLI so the SQLite store, child sessions,
-# messages, and parts are deleted together instead of leaving dangling rows.
+# Enumerate root sessions across projects; OpenCode deletes each root's children.
 _clean_opencode_sessions() {
-  local ids id n=0 failed=0
+  local json ids id n=0 failed=0
   command -v opencode >/dev/null 2>&1 || return 0
-  ids=$(opencode --pure session list --format json 2>/dev/null |
-    sed -n 's/^[[:space:]]*"id":[[:space:]]*"\([^"]*\)".*/\1/p') || return 0
-  for id in $ids; do
+  command -v jq >/dev/null 2>&1 || { echo "  opencode sessions          skipped: jq unavailable"; return 0; }
+  json=$(opencode --pure db --format json 'SELECT s.id FROM session AS s LEFT JOIN session AS parent ON parent.id = s.parent_id WHERE s.parent_id IS NULL OR parent.id IS NULL' 2>/dev/null) || {
+    echo "  opencode sessions          skipped: cannot list sessions"; return 0;
+  }
+  ids=$(printf '%s\n' "$json" | jq -er '
+    if type == "array" and all(.[]; (.id | type) == "string" and (.id | test("^ses_[A-Za-z0-9]+$")))
+    then [.[].id] | join("\n") else error("invalid session list") end' 2>/dev/null) || {
+    echo "  opencode sessions          skipped: invalid session list"; return 0;
+  }
+  while IFS= read -r id; do
+    id=${id%$'\r'}
+    [ -n "$id" ] || continue
     if [ -n "$CLEAN_DRY" ]; then
       n=$((n + 1))
     elif opencode --pure session delete "$id" >/dev/null 2>&1; then
@@ -600,7 +685,7 @@ _clean_opencode_sessions() {
     else
       failed=$((failed + 1))
     fi
-  done
+  done <<< "$ids"
   if [ "$n" -gt 0 ] || [ "$failed" -gt 0 ]; then
     if [ -n "$CLEAN_DRY" ]; then
       printf '  %-26s %s\n' "opencode sessions" "$n sessions"
@@ -611,16 +696,97 @@ _clean_opencode_sessions() {
   return 0
 }
 
-# Codex keeps rollout files and SQLite thread metadata in sync. Extract each
-# rollout UUID, then let `codex delete` remove it consistently. A live session
-# may refuse deletion; count it as kept and continue cleaning other entries.
+# shortcut: requires Codex app-server memory/reset and thread/list with UUID IDs; update if the protocol changes.
+_clean_codex_app_server() {
+  python - "$1" <<'PY'
+import json, queue, shutil, subprocess, sys, threading, uuid
+
+server = None
+ids = {}
+try:
+    mode = sys.argv[1]
+    if mode not in ("sessions", "memories"):
+        raise ValueError("unknown cleanup mode")
+    server = subprocess.Popen([shutil.which("codex"), "app-server"], stdin=subprocess.PIPE,
+                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
+    lines = queue.Queue()
+    def read_output():
+        try:
+            for line in server.stdout:
+                lines.put(line)
+        finally:
+            lines.put(None)
+    threading.Thread(target=read_output, daemon=True).start()
+    request_id = 0
+    def request(method, params):
+        global request_id
+        request_id += 1
+        server.stdin.write(json.dumps({"id": request_id, "method": method, "params": params}) + "\n")
+        server.stdin.flush()
+        while True:
+            line = lines.get(timeout=30)
+            if line is None:
+                raise RuntimeError("app server closed")
+            message = json.loads(line)
+            if message.get("id") != request_id or "method" in message:
+                continue
+            if "error" in message:
+                raise RuntimeError("app server request failed")
+            return message["result"]
+    init = {"clientInfo": {"name": "clean", "version": "1"}}
+    if mode == "memories":
+        init["capabilities"] = {"experimentalApi": True}
+    request("initialize", init)
+    server.stdin.write('{"method":"initialized"}\n')
+    server.stdin.flush()
+    if mode == "memories":
+        if not isinstance(request("memory/reset", None), dict):
+            raise ValueError("invalid memory reset response")
+    else:
+        kinds = ["cli", "vscode", "exec", "appServer", "subAgent", "subAgentReview",
+                 "subAgentCompact", "subAgentThreadSpawn", "subAgentOther", "unknown"]
+        for archived in (False, True):
+            cursor, seen = None, set()
+            while True:
+                params = {"limit": 100, "archived": archived, "sourceKinds": kinds}
+                if cursor is not None:
+                    params["cursor"] = cursor
+                page = request("thread/list", params)
+                if not isinstance(page.get("data"), list):
+                    raise ValueError("invalid session list")
+                for item in page["data"]:
+                    session_id = item["id"]
+                    if str(uuid.UUID(session_id)) != session_id.lower():
+                        raise ValueError("invalid session id")
+                    ids[session_id] = isinstance(item.get("source"), dict)
+                cursor = page.get("nextCursor")
+                if cursor is None:
+                    break
+                if not isinstance(cursor, str) or not cursor or cursor in seen:
+                    raise ValueError("invalid session cursor")
+                seen.add(cursor)
+except Exception:
+    sys.exit(1)
+finally:
+    if server is not None:
+        try:
+            server.stdin.close()
+            server.wait(timeout=5)
+        except (OSError, subprocess.TimeoutExpired):
+            server.terminate()
+            server.wait(timeout=5)
+for session_id in sorted(ids, key=lambda item: not ids[item]):
+    sys.stdout.buffer.write((session_id + "\n").encode("ascii"))
+PY
+}
+
+# Let Codex delete sessions so its transcript and database stores stay in sync.
 _clean_codex_sessions() {
-  local cdir="$1/sessions" f id n=0 failed=0
+  local ids id n=0 failed=0
   command -v codex >/dev/null 2>&1 || return 0
-  [ -d "$cdir" ] || return 0
-  while IFS= read -r -d '' f; do
-    id=$(printf '%s\n' "${f##*/}" | sed -n \
-      's/.*-\([0-9a-fA-F]\{8\}-[0-9a-fA-F]\{4\}-[0-9a-fA-F]\{4\}-[0-9a-fA-F]\{4\}-[0-9a-fA-F]\{12\}\)\.jsonl$/\1/p')
+  command -v python >/dev/null 2>&1 || { echo "  codex sessions             skipped: python unavailable"; return 0; }
+  ids=$(_clean_codex_app_server sessions) || { echo "  codex sessions             skipped: cannot list sessions"; return 0; }
+  while IFS= read -r id; do
     [ -n "$id" ] || continue
     if [ -n "$CLEAN_DRY" ]; then
       n=$((n + 1))
@@ -629,15 +795,29 @@ _clean_codex_sessions() {
     else
       failed=$((failed + 1))
     fi
-  done < <(find "$cdir" -type f -name 'rollout-*.jsonl' -print0 2>/dev/null)
+  done <<< "$ids"
   if [ "$n" -gt 0 ] || [ "$failed" -gt 0 ]; then
     if [ -n "$CLEAN_DRY" ]; then
       printf '  %-26s %s\n' "codex sessions" "$n sessions"
     else
-      printf '  %-26s %s\n' "codex sessions" "$n deleted, $failed kept"
+      printf '  %-26s %s\n' "codex sessions" "$n deleted, $failed failed or already removed"
     fi
   fi
   return 0
+}
+
+# Codex owns its memory database; its reset also clears Computer History where available.
+_clean_codex_memories() {
+  command -v codex >/dev/null 2>&1 || return 0
+  command -v python >/dev/null 2>&1 || { echo "  codex memories             skipped: python unavailable"; return 1; }
+  if [ -n "$CLEAN_DRY" ]; then
+    printf '  %-26s %s\n' "codex memories" "reset local memory"
+  elif _clean_codex_app_server memories; then
+    printf '  %-26s %s\n' "codex memories" "reset"
+  else
+    printf '  %-26s %s\n' "codex memories" "reset failed or unconfirmed" >&2
+    return 1
+  fi
 }
 
 # clean_selfcheck - the helpers above decide what to delete by parsing text
@@ -645,7 +825,7 @@ _clean_codex_sessions() {
 # touching them; nothing calls it automatically. Works on a fake tree, never
 # on your real caches.
 clean_selfcheck() {
-  local t win rc=0 CLEAN_DRY="" CLEAN_TEMP_DAYS=3 live d uuid=8bae70a1-b346-4bbb-bdc0-db1228974670
+  local t win rc=0 CLEAN_DRY="" CLEAN_TEMP_DAYS=3 live d status uuid=8bae70a1-b346-4bbb-bdc0-db1228974670
   t=$(mktemp -d "$HOME/.clean-selfcheck.XXXXXX") || return 1
   win="${t#/}"; win="${win%%/*}:/${t#/*/}"   # /c/Users/x -> c:/Users/x, as VSCodium writes it
 
@@ -670,6 +850,98 @@ clean_selfcheck() {
   [ -f "$t/projects/p/memory/keep.md" ] || { echo "FAIL cc_projects: deleted memory"; rc=1; }
   [ -f "$t/projects/p/CLAUDE.md" ]      || { echo "FAIL cc_projects: deleted CLAUDE.md"; rc=1; }
 
+  mkdir -p "$t/cc/projects/p/memory" "$t/cc/agent-memory/agent"
+  : > "$t/cc/projects/p/memory/MEMORY.md"; : > "$t/cc/agent-memory/agent/MEMORY.md"
+  : > "$t/cc/projects/p/CLAUDE.md"
+  CLEAN_DRY=1
+  _clean_cc_memories "$t/cc" >/dev/null
+  [ -f "$t/cc/projects/p/memory/MEMORY.md" ] && [ -f "$t/cc/agent-memory/agent/MEMORY.md" ] ||
+    { echo "FAIL cc_memories: dry run deleted memory"; rc=1; }
+  CLEAN_DRY=""
+  _clean_cc_memories "$t/cc" >/dev/null
+  [ ! -e "$t/cc/projects/p/memory" ] && [ ! -e "$t/cc/agent-memory" ] && [ -f "$t/cc/projects/p/CLAUDE.md" ] ||
+    { echo "FAIL cc_memories: wrong files removed"; rc=1; }
+
+  mkdir -p "$t/plugins/cache/market/plugin/"{old,installed,unmarked}
+  : > "$t/plugins/cache/market/plugin/old/.orphaned_at"
+  : > "$t/plugins/cache/market/plugin/installed/.orphaned_at"
+  win=$(cygpath -m "$t/plugins/cache/market/plugin/installed")
+  printf '{"plugins":{"active":[{"installPath":"%s"}]}}\n' "$win" > "$t/plugins/installed_plugins.json"
+  CLEAN_DRY=1
+  _clean_cc_plugin_cache "$t/plugins" | grep -q '1 versions' || { echo "FAIL plugin_cache: dry run count"; rc=1; }
+  [ -d "$t/plugins/cache/market/plugin/old" ] || { echo "FAIL plugin_cache: dry run deleted a version"; rc=1; }
+  CLEAN_DRY=""
+  _clean_cc_plugin_cache "$t/plugins" >/dev/null
+  [ -d "$t/plugins/cache/market/plugin/old" ] && { echo "FAIL plugin_cache: kept orphan"; rc=1; }
+  [ -d "$t/plugins/cache/market/plugin/installed" ] || { echo "FAIL plugin_cache: deleted installed version"; rc=1; }
+  [ -d "$t/plugins/cache/market/plugin/unmarked" ] || { echo "FAIL plugin_cache: deleted unmarked version"; rc=1; }
+  mkdir -p "$t/plugins/cache/market/plugin/unknown"
+  : > "$t/plugins/cache/market/plugin/unknown/.orphaned_at"
+  printf 'invalid json\n' > "$t/plugins/installed_plugins.json"
+  _clean_cc_plugin_cache "$t/plugins" >/dev/null
+  [ -d "$t/plugins/cache/market/plugin/unknown" ] || { echo "FAIL plugin_cache: deleted with bad registry"; rc=1; }
+  printf '{"plugins":{"active":[{"installPath":"C:/missing-plugin"}]}}\n' > "$t/plugins/installed_plugins.json"
+  _clean_cc_plugin_cache "$t/plugins" >/dev/null
+  [ -d "$t/plugins/cache/market/plugin/unknown" ] || { echo "FAIL plugin_cache: deleted with missing install"; rc=1; }
+
+  (
+    opencode() {
+      if [ "$2" = db ]; then printf '[{"id":"ses_a"},{"id":"ses_b"}]\n'
+      elif [ "$2" = session ] && [ "$3" = delete ]; then printf '%s\n' "$4" >> "$t/opencode-calls"
+      else return 1; fi
+    }
+    CLEAN_DRY=1
+    live=$(_clean_opencode_sessions)
+    [[ $live == *'2 sessions'* ]] && [ ! -e "$t/opencode-calls" ] || exit 1
+    CLEAN_DRY=""
+    live=$(_clean_opencode_sessions)
+    [[ $live == *'2 deleted, 0 kept'* ]] && [ "$(< "$t/opencode-calls")" = $'ses_a\nses_b' ] || exit 1
+    opencode() {
+      if [ "$2" = db ]; then printf '[{"id":"ses_a"},{"id":"ses_b"}]\n'
+      elif [ "$2" = session ] && [ "$3" = delete ]; then [ "$4" != ses_b ]
+      else return 1; fi
+    }
+    live=$(_clean_opencode_sessions)
+    [[ $live == *'1 deleted, 1 kept'* ]] || exit 1
+    : > "$t/opencode-calls"
+    opencode() { [ "$2" = db ] && { echo invalid; return; }; echo unexpected >> "$t/opencode-calls"; }
+    _clean_opencode_sessions >/dev/null
+    [ ! -s "$t/opencode-calls" ]
+  ) || { echo "FAIL opencode_sessions: preview, deletion, or invalid list"; rc=1; }
+
+  (
+    _clean_codex_app_server() { [ "$1" = sessions ] || return 1; printf '%s\n' 11111111-1111-4111-8111-111111111111 22222222-2222-4222-8222-222222222222; }
+    codex() { [ "$1" = delete ] && [ "$2" = --force ] || return 1; printf '%s\n' "$3" >> "$t/codex-calls"; }
+    CLEAN_DRY=1
+    live=$(_clean_codex_sessions)
+    [[ $live == *'2 sessions'* ]] && [ ! -e "$t/codex-calls" ] || exit 1
+    CLEAN_DRY=""
+    live=$(_clean_codex_sessions)
+    [[ $live == *'2 deleted, 0 failed'* ]] && [ "$(< "$t/codex-calls")" = $'11111111-1111-4111-8111-111111111111\n22222222-2222-4222-8222-222222222222' ] || exit 1
+    codex() { [ "$3" != 22222222-2222-4222-8222-222222222222 ]; }
+    live=$(_clean_codex_sessions)
+    [[ $live == *'1 deleted, 1 failed'* ]] || exit 1
+    : > "$t/codex-calls"
+    codex() { echo unexpected >> "$t/codex-calls"; }
+    _clean_codex_app_server() { return 1; }
+    _clean_codex_sessions >/dev/null
+    [ ! -s "$t/codex-calls" ]
+  ) || { echo "FAIL codex_sessions: preview, deletion, or failed list"; rc=1; }
+
+  (
+    codex() { :; }
+    _clean_codex_app_server() { printf '%s\n' "$1" >> "$t/memory-calls"; [ "$1" = memories ]; }
+    CLEAN_DRY=1
+    live=$(_clean_codex_memories)
+    [[ $live == *'reset local memory'* ]] && [ ! -e "$t/memory-calls" ] || exit 1
+    CLEAN_DRY=""
+    live=$(_clean_codex_memories)
+    [[ $live == *'reset'* ]] && [ "$(< "$t/memory-calls")" = memories ] || exit 1
+    _clean_codex_app_server() { return 1; }
+    _clean_codex_memories >/dev/null 2>&1 && exit 1
+    exit 0
+  ) || { echo "FAIL codex_memories: preview, reset, or failed reset"; rc=1; }
+
   mkdir -p "$t/tmp/mixed"
   : > "$t/tmp/old.txt"; : > "$t/tmp/fresh.txt"; : > "$t/tmp/edge.txt"
   : > "$t/tmp/mixed/old.txt"; : > "$t/tmp/mixed/fresh.txt"
@@ -678,6 +950,7 @@ clean_selfcheck() {
   touch -d '3 days 12 hours ago' "$t/tmp/edge.txt"   # under 4 full days: find keeps it
   CLEAN_DRY=1
   _clean_temp "$t/tmp" | grep -q 'old.txt' || { echo "FAIL temp: dry run did not name an old file"; rc=1; }
+  _clean_temp "$t/tmp" "codex plugin staging" | grep -q 'codex plugin staging' || { echo "FAIL temp: lost custom label"; rc=1; }
   [ -f "$t/tmp/old.txt" ] || { echo "FAIL temp: dry run deleted a file"; rc=1; }
   CLEAN_DRY=""
   _clean_temp "$t/tmp" >/dev/null
@@ -693,6 +966,29 @@ clean_selfcheck() {
   unset -f tasklist
   [ "$live" = "111 (claude.exe)" ] || { echo "FAIL live_claude: wanted '111 (claude.exe)', got '$live'"; rc=1; }
 
+  tasklist() { printf '"codex.exe","333","Console","1","1 K"\n"opencode-windows-x64.exe","444","Console","1","1 K"\n"editor.exe","555","Console","1","1 K"\n'; }
+  live=$(_clean_live_other_ai)
+  [ "$live" = $'codex.exe (333)\nopencode-windows-x64.exe (444)' ] || { echo "FAIL live_other_ai: wrong processes: $live"; rc=1; }
+  tasklist() { return 1; }
+  _clean_live_other_ai >/dev/null && { echo "FAIL live_other_ai: ignored tasklist failure"; rc=1; }
+  unset -f tasklist
+  live=$(
+    _clean_live_claude() { :; }
+    _clean_live_other_ai() { echo 'codex.exe (333)'; }
+    _clean_free() { echo 0; }
+    _hr() { exit 42; }
+    clean -f 2>&1
+  ); status=$?
+  [ "$status" = 1 ] && [[ $live == *'Codex/OpenCode is still running'* ]] || { echo "FAIL clean: did not stop for Codex"; rc=1; }
+  live=$(
+    _clean_live_claude() { :; }
+    _clean_live_other_ai() { return 1; }
+    _clean_free() { echo 0; }
+    _hr() { exit 42; }
+    clean -f 2>&1
+  ); status=$?
+  [ "$status" = 1 ] && [[ $live == *'cannot check Codex/OpenCode processes'* ]] || { echo "FAIL clean: did not stop on process check failure"; rc=1; }
+
   command rm -rf -- "$t"
   [ "$rc" = 0 ] && echo "clean_selfcheck: all checks passed"
   return "$rc"
@@ -704,6 +1000,8 @@ clean() {
   if [ "$1" = "-f" ]; then
     live=$(_clean_live_claude)
     [ -z "$live" ] || { echo "clean -f: Claude Code is still running: ${live//$'\n'/, }. Close it first; bare 'clean' only lists." >&2; return 1; }
+    live=$(_clean_live_other_ai) || { echo "clean -f: cannot check Codex/OpenCode processes; aborting." >&2; return 1; }
+    [ -z "$live" ] || { echo "clean -f: Codex/OpenCode is still running: ${live//$'\n'/, }. Close it first; bare 'clean' only lists." >&2; return 1; }
     CLEAN_DRY=""
   fi
   before=$(_clean_free)
@@ -817,13 +1115,13 @@ clean() {
   _clean_dir  "cc jobs"               "$cc/jobs"
   _clean_dir  "cc cli-nodejs"         "$la/claude-cli-nodejs"
   _clean_cc_projects
+  _clean_cc_memories
+  _clean_cc_plugin_cache
 
   _hr "OpenCode caches"
-  local oc_cache="${XDG_CACHE_HOME:-$HOME/.cache}/opencode"
   local oc_data="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
   local oc_state="${XDG_STATE_HOME:-$HOME/.local/state}/opencode"
   _clean_opencode_sessions
-  _clean_dir  "opencode cache"         "$oc_cache"
   _clean_dir  "opencode logs"          "$oc_data/log"
   _clean_dir  "opencode snapshots"     "$oc_data/snapshot"
   _clean_dir  "opencode locks"         "$oc_state/locks"
@@ -831,7 +1129,8 @@ clean() {
 
   _hr "Codex caches"
   local codex_home="${CODEX_HOME:-$HOME/.codex}"
-  _clean_codex_sessions "$codex_home"
+  _clean_codex_sessions
+  _clean_codex_memories
   _clean_dir  "codex cache"            "$codex_home/cache"
   _clean_file "codex models cache"     "$codex_home/models_cache.json"
   _clean_dir  "codex staging"          "$codex_home/.tmp"
@@ -839,6 +1138,8 @@ clean() {
   _clean_dir  "codex logs"             "$codex_home/log"
   _clean_dir  "codex shell snapshots"  "$codex_home/shell_snapshots"
   _clean_dir  "codex tui refs"         "$codex_home/tui-thread-reference-capabilities"
+  _clean_temp "$codex_home/plugins/.marketplace-plugin-source-staging" "codex plugin sources"
+  _clean_temp "$codex_home/plugins/.remote-plugin-install-staging" "codex plugin installs"
 
   _hr "Temp + dumps"
   _clean_dir  "crash dumps"         "$la/CrashDumps"
