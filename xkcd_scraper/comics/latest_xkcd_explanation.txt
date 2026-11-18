@@ -1,10 +1,8 @@
 This is one of73 incomplete explanations:This page was created a day too early. Don't remove this notice too soon. You can help byediting the explanation!
 
-This comic commemorates the travels ofVoyager 1, a space probe launched in 1977. On November 18, 2026, two days after this comic was published, it will reach a distance from Earth of onelight-day— the distance that light can travel in 24 hours, or 25,902,068,356 kilometers/16,094,799,096 miles).
+This comic commemorates the travels ofVoyager 1, a space probe launched in 1977. On November 18, 2026, two days after this comic was published, it was due to have reached a distance from Earth of onelight-day— the distance that light can travel in 24 hours, or 25,902,068,356 kilometers/16,094,799,096 miles.
 
 A transmission is being sent to Voyager 1 to congratulate the spacecraft on being the first human artifact to travel so far. A person hearing the transmission wonders why the congratulations transmission is being sent on November 17 when Voyager 1 will not achieve that distance until November 18, specificallyat 05:16:07 Eastern Time. The person then realizes that since the transmission travels at the speed of light, Voyager 1 will not receive the transmission until November 18, at the time when it does reach that distance.
 
-The title text claims that Voyager 1 has a multiplayer gaming server which NASA is considering shutting down because players are annoyed by the "172800000ms" ping. That is, since Voyager 1 is one light-day from Earth, it takes 172,800,000 milliseconds for messages to be sent to Voyager 1 and responded to, which is equal to around-trip delay("ping") of two days. For comparison, in gaming, a ping time of 150 milliseconds or more would normally seem sluggish. Voyager 1 does not actually have a gaming server.[citation needed]
-
-Voyager 1 has a comic named after it,1189: Voyager 1, and is likely the most referencedSpace probeon xkcd! See the link and there the detailed explanation on the space probe category page.
+The title text claims that Voyager 1 has a multiplayer gaming server which NASA is considering shutting down because players are annoyed by the "172800000ms" ping. That is, since Voyager 1 is one light-day from Earth, it takes 172,800,000 milliseconds for messages to be sent to Voyager 1 and responded to, which is equal to around-trip delay("ping") of two days. For comparison, in gaming, a ping time of150 millisecondsor more would normally seem sluggish. Voyager 1 does not actually have a gaming server.[citation needed]
 
