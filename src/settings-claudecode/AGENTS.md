@@ -20,3 +20,13 @@ Use ASD-STE100 Issue 9 for English technical explanations, documentation, and pr
 - Use the imperative form in procedures. Put conditions before the commands that depend on them. Give one instruction per sentence unless the actions occur at the same time.
 - Use one topic per paragraph. Keep exact code, commands, identifiers, quotations, and messages. Use the language the user requests.
 - Check the writing rules and dictionary before you claim compliance.
+
+## PTS-BR — Português Técnico Simplificado
+
+Quando o usuário escrever em português brasileiro ou pedir `PTS-BR`, aplique o PTS-BR a explicações técnicas, documentação e procedimentos em português brasileiro. Use o idioma que o usuário pedir para a entrega.
+
+- Consulte as regras de escrita, o dicionário controlado e a referência de termos técnicos. [Regras](https://raw.githubusercontent.com/dvwinck/pts-br/main/02-regras.md) · [Dicionário](https://raw.githubusercontent.com/dvwinck/pts-br/main/03-dicionario.md) · [Termos técnicos](https://raw.githubusercontent.com/dvwinck/pts-br/main/04-termos-tecnicos.md)
+- Use voz ativa e sujeito explícito. Use o mesmo termo para o mesmo conceito. Escreva frases de procedimento com até 20 palavras e frases descritivas com até 25 palavras.
+- Em procedimentos, coloque a condição antes da ação. Use o imperativo. Dê uma instrução por passo, exceto se as ações ocorrerem ao mesmo tempo.
+- Preserve os valores, as datas e as condições. Mantenha o texto exato de código, comandos, identificadores, citações e mensagens.
+- Verifique as regras e o dicionário antes de declarar conformidade.
