@@ -1,38 +1,5 @@
-# RTK - Rust Token Killer
+# RTK in Claude Code auto mode
 
-**Usage**: Token-optimized CLI proxy (cuts up to 90% of bash output)
+Use the explicit RTK form for every supported command, including commands after `|` or `&&`. The hook can change a command after auto mode reviews it. If no allow rule covers the rewrite, Claude Code can report "auto mode classifier gave no verdict".
 
-## Meta Commands (always use rtk directly)
-
-```bash
-rtk gain              # Show token savings analytics
-rtk gain --history    # Show command usage history with savings
-rtk discover          # Analyze Claude Code history for missed opportunities
-rtk proxy <cmd>       # Execute raw command without filtering (for debugging)
-```
-
-## Installation Verification
-
-```bash
-rtk --version         # Should show: rtk X.Y.Z
-rtk gain              # Should work (not "command not found")
-which rtk             # Verify correct binary
-```
-
-## Install Source
-
-RTK is expected to be WinGet-managed on this machine, not a standalone install.
-
-```bash
-winget install --id rtk-ai.rtk -e --accept-source-agreements
-winget upgrade --id rtk-ai.rtk -e --accept-source-agreements
-```
-
-⚠️ **Name collision**: If `rtk gain` fails, you may have reachingforthejack/rtk (Rust Type Kit) installed instead.
-
-## Hook-Based Usage
-
-All other commands are automatically rewritten by the Claude Code hook.
-Example: `git status` → `rtk git status` (transparent, 0 tokens overhead)
-
-Refer to CLAUDE.md for full command reference.
+If this message appears after an RTK rewrite, submit the rewritten command shown in the error.
