@@ -20,6 +20,7 @@
     "ai-firstify@claude-plugins-official": true
   },
   "spinnerTipsEnabled": false,
+  "idleCompaction": false,
   "effortLevel": "xhigh",
   "env": {
     "CLAUDE_CODE_EFFORT_LEVEL": "max",
