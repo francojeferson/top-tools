@@ -295,10 +295,94 @@ _upd_java() {
   fi
 }
 
-# verup_selfcheck - _java_winget_id picks an id out of free text, so prove it
-# finds real JDK ids and ignores everything else. Run by hand after editing it.
+# --- Harness plugins --------------------------------------------------------
+# Claude Code, Codex and OpenCode keep separate plugins (ponytail is in all
+# three), and none of them updates the others'. Each list is read out of the text
+# or JSON its CLI prints, so each reader is its own function for verup_selfcheck.
+
+# Plugin ids out of `claude plugin list --json`. The ones synced from claude.ai
+# (name@synced) have no marketplace behind them, and `claude plugin update`
+# refuses them.
+_cc_plugins() {
+  grep -oE '"id": *"[^"]+"' | cut -d'"' -f4 | grep -v '@synced$'
+}
+
+# Enabled plugins out of `codex plugin list` (columns: PLUGIN, STATUS such as
+# "installed, enabled", VERSION, SOURCE). Not the *-remote marketplace: those are
+# OpenAI's own plugins, and Codex keeps them current itself.
+_cx_plugins() {
+  awk '$2 == "installed," && $3 == "enabled" && $1 !~ /-remote$/ { print $1 }'
+}
+
+# Unpinned npm names out of the "plugin" list of an opencode.json on stdin. A
+# version pin is a choice, and a path or a URL is not an npm package.
+_oc_plugins() {
+  node -e 'for (const p of JSON.parse(require("fs").readFileSync(0, "utf8")).plugin || []) {
+    const s = [].concat(p)[0]; if (/^(@[\w.-]+\/)?[\w.-]+$/.test(s)) console.log(s) }'
+}
+
+# ponytail's codebase map lists every source file it can see, so a virtualenv in
+# the tree floods each session with library code. Upstream skips venv and
+# node_modules, not site-packages. An update installs a fresh copy of the plugin,
+# so put the skip back. $1 = ponytail-map.js; fails when its skip list has moved.
+# shortcut: edits the installed file, Claude Code's copy only; drop this once
+# upstream skips site-packages itself.
+_ponytail_fix() {
+  grep -q 'site-packages' "$1" && return 0
+  sed -i 's/|__pycache__|/|site-packages|dist-packages|__pycache__|/' "$1"
+  grep -q 'site-packages' "$1"
+}
+
+# Refresh every marketplace, then every plugin installed from one. Claude Code
+# applies the new version at its next start.
+_upd_plugins_claude() {
+  local id f
+  _hr "Updating Claude Code plugins..."
+  command -v claude >/dev/null 2>&1 || { echo "claude not installed - skipped"; return; }
+  command claude plugin marketplace update
+  for id in $(command claude plugin list --json | _cc_plugins); do
+    command claude plugin update "$id"
+  done
+  for f in "$HOME"/.claude/plugins/cache/ponytail/ponytail/*/hooks/ponytail-map.js; do
+    [ -f "$f" ] && { _ponytail_fix "$f" || echo "! ponytail skip list not found, not patched: $f"; }
+  done
+}
+
+# `upgrade` refreshes the marketplace catalogs only. A plugin changes when it is
+# added again, and adding a disabled one would enable it, so only enabled ones.
+_upd_plugins_codex() {
+  local id
+  _hr "Updating Codex plugins..."
+  command -v codex >/dev/null 2>&1 || { echo "codex not installed - skipped"; return; }
+  codex plugin marketplace upgrade
+  for id in $(codex plugin list | _cx_plugins); do
+    codex plugin add "$id"
+  done
+}
+
+# `opencode plugin NAME -g` keeps the copy it already has, with or without -f, and
+# an unpinned name is resolved once. Drop the cached copy so the install resolves
+# it again, then print the version that landed. Global config only; a project's
+# own opencode.json is left alone.
+_upd_plugins_opencode() {
+  local cfg="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/opencode.json" names p
+  local pkgs="${XDG_CACHE_HOME:-$HOME/.cache}/opencode/packages"
+  _hr "Updating OpenCode plugins..."
+  command -v opencode >/dev/null 2>&1 || { echo "opencode not installed - skipped"; return; }
+  [ -f "$cfg" ] || { echo "no $cfg - nothing to update"; return; }
+  names=$(_oc_plugins < "$cfg") || { echo "cannot read the plugin list in $cfg"; return; }
+  [ -n "$names" ] || echo "no unpinned plugin in $cfg"
+  for p in $names; do
+    command rm -rf "$pkgs/$p@latest" && opencode plugin "$p" -g &&
+      echo "$p $(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$pkgs/$p@latest/node_modules/$p/package.json" | head -n 1)"
+  done
+}
+
+# verup_selfcheck - _java_winget_id picks an id out of free text, and the plugin
+# readers above pick names out of what their CLIs print, so prove each one keeps
+# what it should and drops the rest. Run by hand after editing any of them.
 verup_selfcheck() {
-  local got rc=0 line
+  local got rc=0 line f
   for line in 'Microsoft Build of OpenJDK (21)  Microsoft.OpenJDK.21  21.0.5  winget:Microsoft.OpenJDK.21' \
               'Eclipse Temurin JDK 21  EclipseAdoptium.Temurin.21.JDK  21.0.5  winget:EclipseAdoptium.Temurin.21.JDK' \
               'Azul Zulu 21  Azul.Zulu.21.JDK  21.0.5  winget:Azul.Zulu.21.JDK' \
@@ -308,14 +392,40 @@ verup_selfcheck() {
     [ "$got" = "${line##*:}" ] ||
       { echo "FAIL java id: got '$got', want '${line##*:}'"; rc=1; }
   done
+  got=$(printf '%s\n' '[' '  {' '    "id": "ponytail@ponytail",' '    "mcpServers": { "id-less": {} }' '  },' \
+          '  { "id": "pdf-viewer@synced", "scope": "synced" },' '  { "id": "b@claude-plugins-official" }' ']' |
+        _cc_plugins | paste -sd,)
+  [ "$got" = "ponytail@ponytail,b@claude-plugins-official" ] ||
+    { echo "FAIL claude plugins: got '$got'"; rc=1; }
+  got=$(printf '%s\n' 'Marketplace `ponytail`' 'C:\Users\x\marketplace.json' '' \
+          'PLUGIN             STATUS              VERSION  SOURCE' \
+          'ponytail@ponytail  installed, enabled  5.3.3    https://github.com/x/y.git, ref `main`' \
+          'off@ponytail       installed, disabled 1.0.0    https://github.com/x/z.git, ref `main`' \
+          'new@ponytail       not installed       1.0.0    https://github.com/x/w.git, ref `main`' \
+          'pages@openai-curated-remote  installed, enabled  0.1.26  plugin_connector_1p_x' |
+        _cx_plugins | paste -sd,)
+  [ "$got" = "ponytail@ponytail" ] || { echo "FAIL codex plugins: got '$got'"; rc=1; }
+  got=$(printf '%s' '{"plugin": ["@dietrichgebert/ponytail", "left-pad@1.3.0", ["opencode-x", {"a": 1}], "./local.js", "file:///c/p.js"]}' |
+        _oc_plugins | paste -sd,)
+  [ "$got" = "@dietrichgebert/ponytail,opencode-x" ] || { echo "FAIL opencode plugins: got '$got'"; rc=1; }
+  f=$(mktemp)
+  printf '%s\n' 'const SKIP_DIR = /(^|\/)(node_modules|\.venv|__pycache__|coverage)(\/|$)/;' > "$f"
+  _ponytail_fix "$f"; got=$(cat "$f"); _ponytail_fix "$f"
+  [ "$got" = 'const SKIP_DIR = /(^|\/)(node_modules|\.venv|site-packages|dist-packages|__pycache__|coverage)(\/|$)/;' ] &&
+    [ "$(cat "$f")" = "$got" ] || { echo "FAIL ponytail fix: got '$got'"; rc=1; }
+  printf '%s\n' 'no skip list here' > "$f"
+  ! _ponytail_fix "$f" || { echo "FAIL ponytail fix: patched a file with no skip list"; rc=1; }
+  command rm -f "$f"
   [ "$rc" = 0 ] && echo "verup_selfcheck: all checks passed"
   return "$rc"
 }
 
-# Update every tool in the toolchain. Skips whatever is not installed.
+# Update every tool in the toolchain, then the plugins of Claude Code, Codex and
+# OpenCode. Skips whatever is not installed.
 # Node before npm and Python before pip: the runtime update ships its own copy
 # of the package manager, so updating the manager first would be thrown away.
 # PyManager goes before Python itself: it is what installs the interpreter.
+# The AI tools go before their plugins, so the new version does its own update.
 verup() {
   _upd node _winget_up OpenJS.NodeJS.LTS
   _upd npm npm install -g npm@latest
@@ -335,6 +445,9 @@ verup() {
   _upd claude npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@latest
   _upd codex npm install -g @openai/codex@latest
   _upd opencode npm install -g --allow-scripts=opencode-ai opencode-ai@latest
+  _upd_plugins_claude
+  _upd_plugins_codex
+  _upd_plugins_opencode
   _hr "End of updates!"
 }
 
@@ -417,7 +530,8 @@ export PATH
 # --- Cache / temp cleanup ---------------------------------------------------
 # clean      dry run: list what would be removed, delete nothing (default)
 # clean -f   actually delete, then report the space reclaimed
-#             also deletes local session history and persistent AI memories;
+#             also deletes local session history, the Claude Code prompt history
+#             (pasted secrets end up there) and persistent AI memories;
 #             close those tools first so their stores and runtime files are idle
 #             (refuses while Claude Code, Codex, or OpenCode is running)
 #
@@ -442,7 +556,6 @@ export PATH
 #   ~/.claude/skills          custom skills
 #   ~/.claude/hooks           user hook scripts
 #   ~/.claude/ide             IDE integration config
-#   ~/.claude/security        security settings
 #   ~/.claude/CLAUDE.md       user instructions
 #   ~/.config/opencode        settings, plugins, and plugin dependencies
 #   ${XDG_CACHE_HOME:-~/.cache}/opencode  installed plugins and runtime files
@@ -624,6 +737,21 @@ _clean_cc_plugin_cache() {
   done
   [ "$n" -gt 0 ] && printf '  %-26s %s\n' "cc orphaned plugins" "$n versions"
   return 0
+}
+
+# Files in ~/.claude that nothing reads any more, or that keep what should not be kept:
+# history.jsonl (every prompt, pasted secrets included), the settings.json backup, the
+# logs and per-session state of the removed security-guidance plugin, and the Claude
+# Manager tap with its data. $1 = the .claude dir (default ~/.claude).
+# shortcut: wipes the whole prompt history instead of scrubbing the secret lines; add a
+# scrubber if you ever want to keep the rest of it.
+_clean_cc_leftovers() {
+  local cc="${1:-$HOME/.claude}"
+  _clean_file "cc prompt history"     "$cc/history.jsonl"
+  _clean_file "cc settings backup"    "$cc/settings.json.bak"
+  _clean_dir  "cc security logs"      "$cc/security"
+  _clean_dir  "cc manager"            "$cc/.claude-manager"
+  _clean_dir  "cc manager snapshots"  "$cc/.claude-manager-snapshots"
 }
 
 # Claude Code writes ~/.claude/sessions/<pid>.json (a Windows pid) for each
@@ -892,6 +1020,22 @@ clean_selfcheck() {
   _clean_cc_plugin_cache "$t/plugins" >/dev/null
   [ -d "$t/plugins/cache/market/plugin/unknown" ] || { echo "FAIL plugin_cache: deleted with missing install"; rc=1; }
 
+  mkdir -p "$t/cc2/security" "$t/cc2/.claude-manager" "$t/cc2/.claude-manager-snapshots/global" "$t/cc2/plugins"
+  : > "$t/cc2/history.jsonl"; : > "$t/cc2/settings.json.bak"; : > "$t/cc2/security/log.txt"
+  : > "$t/cc2/.claude-manager/statusline-tap.js"; : > "$t/cc2/.claude-manager-snapshots/global/s.json"
+  : > "$t/cc2/settings.json"; : > "$t/cc2/.credentials.json"; : > "$t/cc2/CLAUDE.md"; : > "$t/cc2/AGENTS.md"
+  CLEAN_DRY=1
+  _clean_cc_leftovers "$t/cc2" >/dev/null
+  [ -f "$t/cc2/history.jsonl" ] && [ -d "$t/cc2/security" ] || { echo "FAIL cc_leftovers: dry run deleted"; rc=1; }
+  CLEAN_DRY=""
+  _clean_cc_leftovers "$t/cc2" >/dev/null
+  for d in history.jsonl settings.json.bak security .claude-manager .claude-manager-snapshots; do
+    [ -e "$t/cc2/$d" ] && { echo "FAIL cc_leftovers: kept $d"; rc=1; }
+  done
+  for d in settings.json .credentials.json CLAUDE.md AGENTS.md plugins; do
+    [ -e "$t/cc2/$d" ] || { echo "FAIL cc_leftovers: deleted $d"; rc=1; }
+  done
+
   (
     opencode() {
       if [ "$2" = db ]; then printf '[{"id":"ses_a"},{"id":"ses_b"}]\n'
@@ -1125,6 +1269,7 @@ clean() {
   _clean_cc_projects
   _clean_cc_memories
   _clean_cc_plugin_cache
+  _clean_cc_leftovers "$cc"
 
   _hr "OpenCode caches"
   local oc_data="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"

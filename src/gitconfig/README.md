@@ -212,6 +212,23 @@ Python: Python 3.14.6
 `uv self update`, **not** `pip install --upgrade uv` — standalone uv installs live in
 `~/.local/bin`, so the pip route silently upgrades a different copy that is not the one on `PATH`.
 
+`verup` also updates the plugins of Claude Code, Codex and OpenCode. Ponytail is included. Each CLI
+has its own update method:
+
+- **Claude Code:** `verup` updates the marketplaces, then each plugin. It skips the plugins that
+  claude.ai syncs, because `claude plugin update` refuses them.
+- **Codex:** `verup` updates the marketplaces, then adds each enabled plugin again. The command
+  `codex plugin marketplace upgrade` does not change an installed plugin. `verup` does not touch
+  the plugins that OpenAI manages.
+- **OpenCode:** `verup` deletes the cached copy of each unpinned plugin in the global
+  `opencode.json`, then installs it again. The command `opencode plugin NAME -g -f` keeps the old
+  copy. `verup` does not touch a pinned plugin.
+
+The ponytail map does not skip `site-packages`, so a virtualenv in the project fills the session
+context with library code. After each update, `verup` adds the skip to the Claude Code copy of
+ponytail (`_ponytail_fix`). Remove that function when ponytail skips `site-packages` itself.
+`verup_selfcheck` tests the functions that read the plugin lists and that patch ponytail.
+
 ### Aliases
 
 | Git         | Does                     | Shell       | Does                          |
