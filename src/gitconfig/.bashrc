@@ -387,6 +387,14 @@ shopt -s histappend histverify
 # Node installer -> C:\Program Files\nodejs (node, npm, npx)
 [ -d "/c/Program Files/nodejs" ] && PATH="/c/Program Files/nodejs:$PATH"
 
+# Node picked by the Windows user variable NODE_HOME (NODE_16 / NODE_22 under
+# ~/Documents/Tools). The Windows Path hardcodes ...\Tools\node-v22 and never
+# reads NODE_HOME, so changing the variable alone did nothing. Prepended after
+# the installer line above so an explicit choice outranks it.
+_nh=$(cygpath -u "${NODE_HOME:-}" 2>/dev/null)
+[ -n "$_nh" ] && [ -d "$_nh" ] && PATH="$_nh:$PATH"
+unset _nh
+
 # Python installer (PyManager 3.14+) -> %LOCALAPPDATA%\Python\bin (python, pip shims)
 [ -d "$HOME/AppData/Local/Python/bin" ] && PATH="$HOME/AppData/Local/Python/bin:$PATH"
 
