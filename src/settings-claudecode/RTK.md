@@ -1,5 +1,9 @@
 # RTK in Claude Code auto mode
 
-Use the explicit RTK form for every supported command, including commands after `|` or `&&`. The hook can change a command after auto mode reviews it. If no allow rule covers the rewrite, Claude Code can report "auto mode classifier gave no verdict".
+Type the explicit RTK form for every supported command, including commands after `|` or `&&`.
 
-If this message appears after an RTK rewrite, submit the rewritten command shown in the error.
+No hook rewrites commands. A command that you type without `rtk` runs with its full output.
+
+Do not add an `rtk hook` to `settings.json`. A hook that changes a command after auto mode reviews it makes auto mode refuse that command ("auto mode classifier gave no verdict").
+
+`settings.json` sets `RTK_SUPPRESS_HOOK_WARNING=1`. This stops `rtk` from printing a no-hook warning on every command.

@@ -25,7 +25,7 @@ Use ASD-STE100 Issue 9 for English technical explanations, documentation, and pr
 
 Quando o usuário escrever em português brasileiro ou pedir `PTS-BR`, aplique o PTS-BR a explicações técnicas, documentação e procedimentos em português brasileiro. Use o idioma que o usuário pedir para a entrega.
 
-- Consulte as regras de escrita, o dicionário controlado e a referência de termos técnicos. [Regras](https://raw.githubusercontent.com/dvwinck/pts-br/main/02-regras.md) · [Dicionário](https://raw.githubusercontent.com/dvwinck/pts-br/main/03-dicionario.md) · [Termos técnicos](https://raw.githubusercontent.com/dvwinck/pts-br/main/04-termos-tecnicos.md)
+- Consulte as regras de escrita, o dicionário controlado e a referência de termos técnicos. [Regras](https://raw.githubusercontent.com/dvwinck/pts-br/8ada3258de062114010b048569c3825ef49d07e3/02-regras.md) · [Dicionário](https://raw.githubusercontent.com/dvwinck/pts-br/8ada3258de062114010b048569c3825ef49d07e3/03-dicionario.md) · [Termos técnicos](https://raw.githubusercontent.com/dvwinck/pts-br/8ada3258de062114010b048569c3825ef49d07e3/04-termos-tecnicos.md)
 - Use voz ativa e sujeito explícito. Use o mesmo termo para o mesmo conceito. Escreva frases de procedimento com até 20 palavras e frases descritivas com até 25 palavras.
 - Em procedimentos, coloque a condição antes da ação. Use o imperativo. Dê uma instrução por passo, exceto se as ações ocorrerem ao mesmo tempo.
 - Preserve os valores, as datas e as condições. Mantenha o texto exato de código, comandos, identificadores, citações e mensagens.

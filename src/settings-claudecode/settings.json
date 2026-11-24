@@ -1,21 +1,4 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "node \"C:\\Users\\YOURNAME\\.claude\\.claude-manager\\statusline-tap.js\""
-  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
@@ -39,7 +22,8 @@
   "spinnerTipsEnabled": false,
   "effortLevel": "xhigh",
   "env": {
-    "CLAUDE_CODE_EFFORT_LEVEL": "max"
+    "CLAUDE_CODE_EFFORT_LEVEL": "max",
+    "RTK_SUPPRESS_HOOK_WARNING": "1"
   },
   "outputStyle": "Proactive",
   "theme": "dark",
@@ -64,11 +48,7 @@
       "Bash(rtk ls *)",
       "Bash(rtk read *)",
       "Bash(rtk git status *)",
-      "Bash(rtk git diff *)",
-      "Bash(rtk git log *)",
-      "Bash(rtk git show *)",
       "Bash(rtk git branch)",
-      "Bash(rtk git fetch *)",
       "Bash(rtk git stash list)",
       "Bash(rtk git remote -v)"
     ]
