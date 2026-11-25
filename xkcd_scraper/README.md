@@ -1,8 +1,7 @@
 # XKCD Comic Scraper
 
 This tool automatically scrapes the latest XKCD comic from [xkcd.com](https://xkcd.com/) every 24 hours and saves it to
-a local directory. It uses Python with libraries like `requests` for HTTP requests, `BeautifulSoup` for HTML parsing,
-and `schedule` for task scheduling.
+a local directory. It uses Python with libraries like `requests` for HTTP requests and `BeautifulSoup` for HTML parsing.
 
 ## Installation
 
@@ -37,6 +36,8 @@ and `schedule` for task scheduling.
 
 ## Notes
 
+- The script writes the comic and its explanation only after both downloads succeed. If anything fails, it exits with
+  code 1, so the daily GitHub Actions job fails and nothing is committed.
 - The script uses a user-agent header to mimic a browser request. If XKCD changes its website structure, the script
   might need updates to correctly parse the comic image URL.
 
