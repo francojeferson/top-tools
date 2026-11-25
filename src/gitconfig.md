@@ -47,7 +47,7 @@ gs='git status -sb'       # Compact status
 gaa='git add --all'       # Stage all changes
 gc='git commit -m'        # Commit with message
 gl='git log --graph'      # Visual history
-gcc='git checkout'        # Switch branches
+gco='git checkout'        # Switch branches
 gpo='git push origin'     # Push to origin
 ```
 
@@ -65,7 +65,7 @@ gpo='git push origin'     # Push to origin
 
    ```bash
    work  # cd to repos directory
-   gcc feature-branch  # Switch to feature branch
+   gco feature-branch  # Switch to feature branch
    ```
 
 2. **Make Changes**:

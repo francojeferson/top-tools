@@ -237,7 +237,7 @@ ponytail (`_ponytail_fix`). Remove that function when ponytail skips `site-packa
 | `ga` `gaa`  | stage file / stage all   | `..` `...`  | up one / two directories      |
 | `gc "msg"`  | commit with message      | `ll` `ll.`  | long listing / include hidden |
 | `gl`        | graph log                | `lls` `llt` | sort by size / by time        |
-| `gcc` `gb`  | checkout / branches      | `cls`       | clear screen                  |
+| `gco` `gb`  | checkout / branches      | `cls`       | clear screen                  |
 | `gpo`       | push to origin           | `bls`       | wipe shell history            |
 | `ssa "msg"` | stash and keep working   | `rm`        | `rm -iv` (prompts before del) |
 

@@ -39,8 +39,8 @@ unset agent_state
 
 # Git aliases
 alias gs='git status -sb'
-alias gcc='git checkout'
-alias gcm='git checkout master'
+alias gco='git checkout'
+alias gcm='git checkout main'
 alias gaa='git add --all'
 gc() {
   git commit -m "$*"
